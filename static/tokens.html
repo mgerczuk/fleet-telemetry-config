@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<head></head>
+
+<body>
+    <input type="hidden" id="client_id" />
+
+    <h1>Third Party Tokens</h1>
+
+    <h2>Step 1: User Authorization</h2>
+
+    <table>
+        <tr>
+            <td>Scope:</td>
+            <td><input type="text" size="60" id="scope_authorize" value="openid vehicle_device_data offline_access">
+            </td>
+        </tr>
+        <tr>
+            <td />
+            <td><button type="button" onclick="authorize()">Authorize</button></td>
+        </tr>
+    </table>
+
+    <h2>Step 2: Callback</h2>
+
+    After the user authorizes their account with Tesla, they will be redirected to the specified redirect_uri.
+    <p />
+
+    <h2>Step 3: Code Exchange</h2>
+
+    Current token expires at <span id="expires_at"></span>
+    <p />
+
+    <h3>Refresh Tokens</h3>
+
+    <button type="button" onclick="refresh()">Refresh Token</button>
+
+
+    <h1>Fleet Telemetry</h1>
+
+    see also <a
+        href="https://developer.tesla.com/docs/fleet-api/fleet-telemetry">https://developer.tesla.com/docs/fleet-api/fleet-telemetry</a>
+    <p />
+
+    <h2>Pairing a Key</h2>
+
+    To pair a key to the vehicle go to <a id="pair"
+        href="https://tesla.com/_ak/developer-domain.com">https://tesla.com/_ak/&lt;developer-domain.com&gt;</a>
+
+    <h2>Configuring a Vehicle</h2>
+
+    <table>
+        <tr>
+            <td>VINs:</td>
+            <td><textarea id="vins" rows="3"></textarea></td>
+        </tr>
+        <tr>
+            <td>Fields:</td>
+            <td><textarea id="config" rows="15" cols="40"></textarea></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><button type="button" onclick="save()">Save</button></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <button type="button" onclick="sendConfig()">Send to Vehicle</button>
+                <span id="send_config_result"></span>
+            </td>
+        </tr>
+    </table>
+    <p />
+    <table>
+        <tr>
+            <td>VIN:</td>
+            <td><input id="vin"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <button type="button" onclick="getConfig()">Get from Vehicle</button>
+                <span id="get_config_result"></span>
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>
+                <button type="button" onclick="deleteConfig()">Delete from Vehicle</button>
+                <span id="delete_config_result"></span>
+            </td>
+        </tr>
+        <tr>
+            <td>Result:</td>
+            <td><textarea id="get_config" rows="15" cols="40"></textarea></td>
+        </tr>
+    </table>
+
+    <script type="text/javascript" src="tools.js"></script>
+    <script type="text/javascript">
+
+        var params = new URL(document.location.toString()).searchParams;
+        var uid = params.get("uid");
+        console.log("uid=" + uid)
+
+        document.addEventListener("DOMContentLoaded", () => {
+            getData("/api/data/config", processConfigData)
+            getData("/api/data/application", processApplicationData)
+            getData("/api/data/token_expires?uid=" + uid)
+            getData("/api/data/telemetry_config", processTelemetryConfig)
+
+            params = new URL(document.location.toString()).searchParams;
+            authCode = params.get("auth_code");
+            console.log("auth_code=" + authCode)
+            if (authCode != null) {
+                onCodeReceived(authCode)
+            }
+        });
+
+        function processConfigData(statusCode, bodyText) {
+            var response = JSON.parse(bodyText);
+
+            console.log(response)
+            console.log(response.public_hostname)
+            s = "https://tesla.com/_ak/" + response.public_hostname
+            document.getElementById("pair").href = s
+            document.getElementById("pair").innerHTML = s
+        }
+
+        function processApplicationData(statusCode, bodyText) {
+            var response = JSON.parse(bodyText)
+            console.log(response)
+
+            document.getElementById("client_id").value = response.client_id
+        }
+
+        function processTelemetryConfig(statusCode, bodyText) {
+            var config = JSON.parse(bodyText);
+            delete config.config.ca
+            delete config.config.hostname
+            delete config.config.xyz
+
+            document.getElementById("vins").value = config.vins.join("\n")
+            document.getElementById("config").value = JSON.stringify(config.config, null, 3)
+        }
+
+        function authorize() {
+            //console.log("client_id=" + document.getElementById("client_id").value)
+            const url = new URL(window.location.origin + "/auth/request")
+            url.searchParams.append("client_id", document.getElementById("client_id").value)
+            url.searchParams.append("redirect_uri", window.location)
+            url.searchParams.append("scope", document.getElementById("scope_authorize").value)
+            console.log("url=" + url)
+            window.location.href = url.href
+        }
+
+        function onCodeReceived(code) {
+            params = {
+                "uid": uid,
+                "code": code
+            }
+            postData("/api/initial_token", JSON.stringify(params), function (statusCode, bodyText) {
+                console.log(statusCode + " " + bodyText)
+                if (statusCode >= 400) {
+                    alert("Initial token failed:\n" + bodyText)
+                }
+
+                url = new URL(document.location.toString())
+                url.searchParams.delete("auth_code")
+                console.log(url.href)
+                window.location.href = url.href
+            });
+        }
+
+        function refresh() {
+            var param = {
+                uid: uid
+            }
+
+            postData("/api/refresh_token", JSON.stringify(param), function (code, body) {
+                getData("/api/data/token_expires?uid=" + uid)
+            })
+        }
+
+        function save() {
+
+            var vins = document.getElementById("vins").value.split("\n")
+            var config = JSON.parse(document.getElementById("config").value)
+
+            var data = {
+                "vins": vins,
+                "config": config
+            }
+
+            console.log(JSON.stringify(data, null, 3))
+            putData("/api/data/telemetry_config", JSON.stringify(data))
+        }
+
+        function sendConfig() {
+            var vins = document.getElementById("vins").value.split("\n")
+            var config = JSON.parse(document.getElementById("config").value)
+
+            var data = {
+                uid: uid,
+                vins: vins,
+                config: config
+            }
+            console.log(JSON.stringify(data, null, 3))
+
+            postData("/api/send_telemetry_config", JSON.stringify(data), function (code, body) {
+                document.getElementById("send_config_result").textContent = body
+                if (code >= 400) {
+                    alert("fleet_telemetry_config failed")
+                }
+            })
+        }
+
+        function getConfig() {
+
+            const params = new URLSearchParams({
+                uid: uid,
+                vin: document.getElementById("vin").value
+            });
+            console.log(params.toString())
+
+
+            getData(
+                "/api/vehicle_telemetry_config?" + params.toString(),
+                function (code, body) {
+                    console.log(body)
+                    if (code >= 400) {
+                        document.getElementById("get_config_result").textContent = body
+                        alert("get vehicle_telemetry_config failed")
+                    } else {
+                        document.getElementById("get_config_result").textContent = "Ok"
+                        document.getElementById("get_config").value = JSON.stringify(JSON.parse(body), null, 3)
+                    }
+                })
+        }
+
+        function deleteConfig() {
+
+            const params = new URLSearchParams({
+                vin: document.getElementById("vin").value
+            });
+
+            deleteData(
+                "/api/vehicle_telemetry_config?" + params.toString(),
+                null,
+                function (code, body) {
+                    if (code >= 400) {
+                        document.getElementById("delete_config_result").textContent = body
+                        alert("delete vehicle_telemetry_config failed")
+                    } else {
+                        document.getElementById("delete_config_result").textContent = "Ok"
+                        document.getElementById("get_config").value = JSON.stringify(JSON.parse(body), null, 3)
+                    }
+                }
+            )
+        }
+
+    </script>
+</body>

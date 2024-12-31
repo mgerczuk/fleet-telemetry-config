@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+
+<head></head>
+
+<body>
+    <h1>Configure Application</h1>
+
+    <p />
+    <a href="https://developer.tesla.com/docs/fleet-api/getting-started/what-is-fleet-api">Original
+        Documentation</a>
+
+    <h2>Step 1: Create a Tesla Account</h2>
+
+    Create a Tesla account and ensure it has a verified email and multi-factor authentication enabled.
+    <p />
+
+    <a href="https://developer.tesla.com/teslaaccount" target="_blank"><button type="button">Create
+            Account</button></a>
+    <p />
+    <p />
+
+    <h2>Step 2: Create an Application</h2>
+
+    Click the button below to request app access. Provide legal business details, application name, description, and
+    purpose of usage.
+    <p />
+
+    While requesting access, select the scopes used by the application. Reference the <a
+        href="https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes">authentication overview
+        page</a> for a list of available scopes.
+    <p />
+
+    Note: account creation requests can be automatically rejected if the application name already exists.
+    <p />
+
+    <a href="https://developer.tesla.com/dashboard" target="_blank"><button type="button">Create Application and
+            Access
+            Dashboard</button></a>
+    <p />
+    <p />
+
+    Enter values here:
+    <p />
+
+    <table>
+        <tr>
+            <td>App Name:</td>
+            <td><input type="text" size="40" id="app_name" /></td>
+        </tr>
+        <tr>
+            <td>Client Id:</td>
+            <td><input type="text" size="40" id="client_id"></td>
+        </tr>
+        <tr>
+            <td>Client Secret:</td>
+            <td><input type="text" size="40" id="client_secret"></td>
+        </tr>
+        <tr>
+            <td />
+            <td><button type="button" onclick="saveApplication()">Save</button></td>
+        </tr>
+    </table>
+    <p />
+
+
+
+    <h2>Step 3: Generate a Public/Private Key Pair</h2>
+
+    private-key.pem:
+    <p />
+    <textarea id="private_key" rows="6" cols="65"></textarea>
+    <p />
+    public-key.pem:
+    <p />
+    <textarea id="public_key" rows="5" cols="65"></textarea>
+    <p />
+
+    <td><button type="button" onclick="saveKeys()">Save</button></td>
+    <p />
+
+    <h2>Step 4: Call the Register Endpoint</h2>
+
+    <table>
+        <tr>
+            <td>Scope:</td>
+            <td><input type="text" size="60" id="scope_register"
+                    value="openid vehicle_device_data vehicle_cmds vehicle_charging_cmds"></td>
+        </tr>
+        <tr>
+            <td />
+            <td><button type="button" onclick="register()">Register</button></td>
+        </tr>
+    </table>
+    <p />
+
+    <script type="text/javascript" src="tools.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            getData("/api/data/application")
+            getData("/api/data/keys")
+        });
+
+        function saveApplication() {
+            var formData = JSON.stringify({
+                app_name: document.getElementById("app_name").value,
+                client_id: document.getElementById("client_id").value,
+                client_secret: document.getElementById("client_secret").value
+            });
+
+            putData("/api/data/application", formData)
+        }
+
+        function saveKeys() {
+            var formData = JSON.stringify({
+                private_key: document.getElementById("private_key").value,
+                public_key: document.getElementById("public_key").value
+            });
+
+            putData("/api/data/keys", formData)
+        }
+
+        function register() {
+            var formData = JSON.stringify({
+                scope: document.getElementById("scope_register").value
+            });
+
+            postData("/api/register", formData)
+        }
+
+    </script>
+</body>

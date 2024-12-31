@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<head></head>
+
+<body>
+
+    <h1>Application</h1>
+
+    <a href="application.html">Configure Application</a>
+    <p />
+
+    <p />
+    <h1>Users</h1>
+
+    <table id="users">
+    </table>
+
+    <script type="text/javascript" src="tools.js"></script>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            getData("/api/data/users", processUsers)
+        });
+
+        function processUsers(statusCode, bodyText) {
+            if (statusCode != 200) {
+                return
+            }
+
+            console.log("bodyText=" + bodyText)
+            var users = JSON.parse(bodyText)
+            console.log("users=" + users.toString())
+
+            var table = document.getElementById('users');
+            table.innerHTML = "";
+            users.forEach(user => {
+                var tr = document.createElement('tr');
+                var html = "<td>" + user.name + "</td>";
+                html = html + "<td><a href='tokens.html?uid=" + user.uid + "'>Edit</a></td>"
+                tr.innerHTML = html;
+                table.appendChild(tr);
+            });
+        }
+
+    </script>
+</body>
