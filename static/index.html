@@ -35,7 +35,8 @@
             users.forEach(user => {
                 var tr = document.createElement('tr');
                 var html = "<td>" + user.name + "</td>";
-                html = html + "<td><a href='tokens.html?uid=" + user.uid + "'>Edit</a></td>"
+                html = html + "<td><a href='tokens.html?uid=" + user.uid + "'>Token</a></td>"
+                html = html + "<td><a href='configure.html?uid=" + user.uid + "'>Configure</a></td>"
                 tr.innerHTML = html;
                 table.appendChild(tr);
             });
