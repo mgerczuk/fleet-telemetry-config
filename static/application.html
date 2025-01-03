@@ -3,6 +3,8 @@
 <head></head>
 
 <body>
+    <a href="index.html">zurück</a>
+
     <h1>Configure Application</h1>
 
     <p />
@@ -62,9 +64,11 @@
     </table>
     <p />
 
-
-
     <h2>Step 3: Generate a Public/Private Key Pair</h2>
+
+    <button type="button" onclick="createNewKeys()">Create New Keys</button><br />
+    <span id="create-keys-error"></span>
+    <p />
 
     private-key.pem:
     <p />
@@ -125,6 +129,22 @@
             });
 
             postData("/api/register", formData)
+        }
+
+        function createNewKeys() {
+
+            if (document.getElementById("private_key").value != "" || document.getElementById("public_key").value != "") {
+                if (!confirm("Overwrite existing keys?")) {
+                    return
+                }
+            }
+            postData("/api/data/keys", "", function (statusCode, bodyText) {
+                if (statusCode == 201) {
+                    getData("/api/data/keys")
+                } else {
+                    document.getElementById("create-keys-error").textContent = bodyText
+                }
+            })
         }
 
     </script>

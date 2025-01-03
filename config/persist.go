@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"os"
 
@@ -50,6 +51,9 @@ func GetPersist() (data *Persist, err error) {
 
 	file, err := os.Open(persistFile)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return &Persist{}, nil
+		}
 		return nil, err
 	}
 	defer file.Close()

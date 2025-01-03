@@ -6,14 +6,25 @@
 
     <h1>Application</h1>
 
+    Setup a Tesla developer account and an application.
+    <p />
+
     <a href="application.html">Configure Application</a>
     <p />
 
     <p />
     <h1>Users</h1>
 
+    Add a user for each Tesla account which owns a vehicle you want to configure. Then get the token and finally
+    configure the vehicle(s).
+    <p />
+
     <table id="users">
     </table>
+    <p />
+    Name: <input type="text" id="user_name"></input>
+    <button type="button" onclick="addUser()">Add User</button><br />
+    <span id="add_user_error"></span>
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
@@ -40,6 +51,19 @@
                 tr.innerHTML = html;
                 table.appendChild(tr);
             });
+        }
+
+        function addUser() {
+            params = {
+                "name": document.getElementById("user_name").value
+            }
+            postData("/api/data/users", JSON.stringify(params), function (statusCode, bodyText) {
+                if (statusCode == 201) {
+                    location.reload()
+                } else {
+                    document.getElementById("add_user_error").textContent = bodyText
+                }
+            })
         }
 
     </script>

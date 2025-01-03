@@ -1,11 +1,18 @@
 package api
 
 import (
+	"bytes"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/mgerczuk/fleet-telemetry-config/config"
 )
 
@@ -13,7 +20,7 @@ func HandleDataModel(muxPrivate *http.ServeMux, configData *config.Config) {
 	muxPrivate.HandleFunc("GET /api/data/config", getConfig(*configData))
 	muxPrivate.HandleFunc("/api/data/application", getApplication)
 	muxPrivate.HandleFunc("/api/data/keys", getKeys)
-	muxPrivate.HandleFunc("GET /api/data/users", getUsers)
+	muxPrivate.HandleFunc("/api/data/users", handleUsers)
 	muxPrivate.HandleFunc("GET /api/data/token_expires", getTokenExpires)
 	muxPrivate.HandleFunc("/api/data/telemetry_config", getTelemetryConfig)
 }
@@ -84,12 +91,69 @@ func getKeys(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+	case "POST":
+		var err error
+		data.Keys.PrivateKey, data.Keys.PublicKey, err = createKeys()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = config.PutPersist(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+
 	default:
 		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
 	}
 }
 
-func getUsers(w http.ResponseWriter, r *http.Request) {
+func createKeys() (privateKeyPEM string, publicKeyPEM string, err error) {
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return "", "", err
+	}
+
+	privateKeyBytes, err := x509.MarshalECPrivateKey(privateKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	privatePemBlock := &pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: privateKeyBytes,
+	}
+
+	var privateKeyRow bytes.Buffer
+	err = pem.Encode(&privateKeyRow, privatePemBlock)
+	if err != nil {
+		return "", "", err
+	}
+
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	publicPemBlock := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicKeyBytes,
+	}
+
+	var publicKeyRow bytes.Buffer
+	err = pem.Encode(&publicKeyRow, publicPemBlock)
+	if err != nil {
+		return "", "", err
+	}
+
+	return privateKeyRow.String(), publicKeyRow.String(), nil
+}
+
+func handleUsers(w http.ResponseWriter, r *http.Request) {
 
 	data, err := config.GetPersist()
 	if err != nil {
@@ -97,17 +161,48 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type user struct {
-		Uid  string `json:"uid"`
-		Name string `json:"name"`
-	}
+	switch method := r.Method; method {
+	case "GET":
+		type user struct {
+			Uid  string `json:"uid"`
+			Name string `json:"name"`
+		}
 
-	names := make([]user, 0, len(data.Users))
-	for key, u := range data.Users {
-		names = append(names, user{Uid: key, Name: u.Name})
-	}
+		names := make([]user, 0, len(data.Users))
+		for key, u := range data.Users {
+			names = append(names, user{Uid: key, Name: u.Name})
+		}
 
-	json.NewEncoder(w).Encode(names)
+		json.NewEncoder(w).Encode(names)
+
+	case "POST":
+		type user struct {
+			Name string `json:"name"`
+		}
+		var u user
+		err := json.NewDecoder(r.Body).Decode(&u)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		id := uuid.New()
+		if data.Users == nil {
+			data.Users = make(map[string]*config.User)
+		}
+		data.Users[id.String()] = &config.User{Name: u.Name}
+
+		err = config.PutPersist(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+
+	default:
+		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
+	}
 }
 
 func getTokenExpires(w http.ResponseWriter, r *http.Request) {
