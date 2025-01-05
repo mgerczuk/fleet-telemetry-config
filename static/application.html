@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="index.css">
 
 <head></head>
 
@@ -7,42 +8,37 @@
 
     <h1>Configure Application</h1>
 
-    <p />
-    <a href="https://developer.tesla.com/docs/fleet-api/getting-started/what-is-fleet-api">Original
-        Documentation</a>
+    <p><a href="https://developer.tesla.com/docs/fleet-api/getting-started/what-is-fleet-api">Original
+            Documentation</a>
+    </p>
 
     <h2>Step 1: Create a Tesla Account</h2>
 
-    Create a Tesla account and ensure it has a verified email and multi-factor authentication enabled.
-    <p />
+    <p>Create a Tesla account and ensure it has a verified email and multi-factor authentication enabled.
+    </p>
 
-    <a href="https://developer.tesla.com/teslaaccount" target="_blank"><button type="button">Create
-            Account</button></a>
-    <p />
-    <p />
+    <p><a href="https://developer.tesla.com/teslaaccount" target="_blank"><button type="button"
+                class="w3-button w3-light-blue">Create
+                Account</button></a>
+    </p>
 
     <h2>Step 2: Create an Application</h2>
 
-    Click the button below to request app access. Provide legal business details, application name, description, and
-    purpose of usage.
-    <p />
+    <p>Click the button below to request app access. Provide legal business details, application name, description, and
+        purpose of usage.</p>
 
-    While requesting access, select the scopes used by the application. Reference the <a
-        href="https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes">authentication overview
-        page</a> for a list of available scopes.
-    <p />
+    <p>While requesting access, select the scopes used by the application. Reference the <a
+            href="https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes">authentication overview
+            page</a> for a list of available scopes.</p>
 
-    Note: account creation requests can be automatically rejected if the application name already exists.
-    <p />
+    <p>Note: account creation requests can be automatically rejected if the application name already exists.</p>
 
-    <a href="https://developer.tesla.com/dashboard" target="_blank"><button type="button">Create Application and
-            Access
-            Dashboard</button></a>
-    <p />
-    <p />
+    <p><a href="https://developer.tesla.com/dashboard" target="_blank"><button type="button"
+                class="w3-button w3-light-blue">Create Application and
+                Access
+                Dashboard</button></a></p>
 
-    Enter values here:
-    <p />
+    <p>Enter values here:</p>
 
     <table>
         <tr>
@@ -59,28 +55,27 @@
         </tr>
         <tr>
             <td />
-            <td><button type="button" onclick="saveApplication()">Save</button></td>
+            <td><button type="button" onclick="saveApplication()" class="w3-button w3-light-blue">Save</button></td>
         </tr>
     </table>
     <p />
 
     <h2>Step 3: Generate a Public/Private Key Pair</h2>
 
-    <button type="button" onclick="createNewKeys()">Create New Keys</button><br />
-    <span id="create-keys-error"></span>
-    <p />
+    <p>
+        <button type="button" onclick="createNewKeys()" class="w3-button w3-light-blue">Create New Keys</button><br />
+        <span id="create-keys-error"></span>
+    </p>
 
-    private-key.pem:
-    <p />
-    <textarea id="private_key" rows="6" cols="65"></textarea>
-    <p />
-    public-key.pem:
-    <p />
-    <textarea id="public_key" rows="5" cols="65"></textarea>
-    <p />
+    <p>private-key.pem:</p>
+    <p><textarea id="private_key" rows="6" cols="65"></textarea></p>
 
-    <td><button type="button" onclick="saveKeys()">Save</button></td>
-    <p />
+    <p>public-key.pem:</p>
+    <p><textarea id="public_key" rows="5" cols="65"></textarea></p>
+
+    <p>
+        <td><button type="button" onclick="saveKeys()" class="w3-button w3-light-blue">Save</button></td>
+    </p>
 
     <h2>Step 4: Call the Register Endpoint</h2>
 
@@ -92,10 +87,9 @@
         </tr>
         <tr>
             <td />
-            <td><button type="button" onclick="register()">Register</button></td>
+            <td><button type="button" onclick="register()" class="w3-button w3-light-blue">Register</button></td>
         </tr>
     </table>
-    <p />
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">

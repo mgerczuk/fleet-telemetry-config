@@ -1,30 +1,40 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="index.css">
 
 <head></head>
 
 <body>
 
-    <h1>Application</h1>
+    <h1>Setup Application</h1>
 
-    Setup a Tesla developer account and an application.
-    <p />
+    <p>Setup a Tesla developer account and an application.</p>
 
-    <a href="application.html">Configure Application</a>
-    <p />
+    <p><a href="application.html" class="w3-button w3-light-blue">Configure Application</a></p>
 
-    <p />
-    <h1>Users</h1>
+    <h1>Setup Users</h1>
 
-    Add a user for each Tesla account which owns a vehicle you want to configure. Then get the token and finally
-    configure the vehicle(s).
-    <p />
+    <p>Add a user for each Tesla account which owns a vehicle you want to configure. Then get the token and finally
+        configure the vehicle(s).</p>
 
     <table id="users">
     </table>
-    <p />
-    Name: <input type="text" id="user_name"></input>
-    <button type="button" onclick="addUser()">Add User</button><br />
-    <span id="add_user_error"></span>
+
+    <table>
+        <tr>
+            <td>
+                Name: <input type="text" id="user_name"></input>
+            </td>
+            <td>
+                <button type="button" onclick="addUser()" class="w3-button w3-light-blue">Add User</button><br />
+            </td>
+        </tr>
+        <tr>
+            <td />
+            <td>
+                <span id="add_user_error"></span>
+            </td>
+        </tr>
+    </table>
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
@@ -46,8 +56,8 @@
             users.forEach(user => {
                 var tr = document.createElement('tr');
                 var html = "<td>" + user.name + "</td>";
-                html = html + "<td><a href='tokens.html?uid=" + user.uid + "'>Token</a></td>"
-                html = html + "<td><a href='configure.html?uid=" + user.uid + "'>Configure</a></td>"
+                html = html + "<td><a href='tokens.html?uid=" + user.uid + "' class='w3-button w3-light-blue'>Token</a></td>"
+                html = html + "<td><a href='configure.html?uid=" + user.uid + "' class='w3-button w3-light-blue'>Configure</a></td>"
                 tr.innerHTML = html;
                 table.appendChild(tr);
             });

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<link rel="stylesheet" href="index.css">
 
 <head></head>
 
@@ -9,7 +10,8 @@
 
     <h1>Third Party Tokens</h1>
 
-    <a href="https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens">Original Documentation</a>
+    <p><a href="https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens">Original Documentation</a>
+    </p>
 
     <h2>Step 1: User Authorization</h2>
 
@@ -21,21 +23,19 @@
         </tr>
         <tr>
             <td />
-            <td><button type="button" onclick="authorize()">Authorize</button></td>
+            <td><button type="button" onclick="authorize()" class="w3-button w3-light-blue">Authorize</button></td>
         </tr>
     </table>
 
     <h2>Step 2: Callback</h2>
 
-    After the user authorizes their account with Tesla, they will be redirected to the specified redirect_uri.
-    <p />
+    <p>After the user authorizes their account with Tesla, they will be redirected to the specified redirect_uri.</p>
 
     <h2>Step 3: Code Exchange</h2>
 
-    Current token expires at <span id="expires_at"></span>
-    <p />
+    <p>Current token expires at <span id="expires_at"></span></p>
 
-    <button type="button" onclick="refresh()">Refresh Token</button>
+    <p><button type="button" onclick="refresh()" class="w3-button w3-light-blue">Refresh Token</button></p>
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
