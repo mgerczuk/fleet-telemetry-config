@@ -54,6 +54,10 @@
             <td><input type="text" size="40" id="client_secret"></td>
         </tr>
         <tr>
+            <td>Audience:</td>
+            <td><input type="text" size="40" id="audience" value="https://fleet-api.prd.eu.vn.cloud.tesla.com"></td>
+        </tr>
+        <tr>
             <td />
             <td><button type="button" onclick="saveApplication()" class="w3-button w3-light-blue">Save</button></td>
         </tr>
@@ -102,7 +106,8 @@
             var formData = JSON.stringify({
                 app_name: document.getElementById("app_name").value,
                 client_id: document.getElementById("client_id").value,
-                client_secret: document.getElementById("client_secret").value
+                client_secret: document.getElementById("client_secret").value,
+                audience: document.getElementById("audience").value
             });
 
             putData("/api/data/application", formData)

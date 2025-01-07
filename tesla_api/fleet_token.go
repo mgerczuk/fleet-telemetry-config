@@ -48,14 +48,12 @@ func getToken(params url.Values) (result *FleetToken, err error) {
 		return nil, errors.New(string(bodyBytes))
 	}
 
-	var r1 FleetToken
+	r1 := FleetToken{CreatedAt: time.Now()}
 	err = json.Unmarshal(bodyBytes, &r1)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
-
-	r1.CreatedAt = time.Now()
 
 	return &r1, nil
 

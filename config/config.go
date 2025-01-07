@@ -2,34 +2,33 @@ package config
 
 import (
 	"encoding/json"
-	"flag"
 	"os"
 )
 
 type Config struct {
-	PublicHostname string `json:"public_hostname,omitempty"`
+	PublicServer struct {
+		Hostname string `json:"hostname,omitempty"`
 
-	// PublicPort is the port of the web server facing the internet
-	PublicPort int `json:"public_port,omitempty"`
+		// PublicPort is the port of the web server facing the internet
+		Port int `json:"port,omitempty"`
 
-	// Certificate for the PublicHostname
-	PublicCert string `json:"cert,omitempty"`
+		// Certificate for the PublicHostname
+		Cert string `json:"cert,omitempty"`
 
-	// Private key for the PublicHostname
-	PublicKey string `json:"key,omitempty"`
+		// Private key for the PublicHostname
+		Key string `json:"key,omitempty"`
+	} `json:"public_server"`
 
-	// PublicPort is the port of the web server facing the local network
-	PrivatePort int `json:"private_port,omitempty"`
+	PrivateServer struct {
+		// PublicPort is the port of the web server facing the local network
+		Port int `json:"port,omitempty"`
 
-	// The folder of the static web pages
-	WebRoot string `json:"web_root,omitempty"`
-
-	// the base url for Tesla API
-	Audience string `json:"audience,omitempty"`
+		// The folder of the static web pages
+		WebRoot string `json:"web_root,omitempty"`
+	} `json:"private_server"`
 }
 
-func LoadApplicationConfiguration() (config *Config, err error) {
-	configFilePath := loadConfigFlags()
+func LoadApplicationConfiguration(configFilePath string) (config *Config, err error) {
 
 	configFile, err := os.Open(configFilePath)
 	if err != nil {
@@ -42,12 +41,4 @@ func LoadApplicationConfiguration() (config *Config, err error) {
 	}
 
 	return config, err
-}
-
-func loadConfigFlags() string {
-	applicationConfig := ""
-	flag.StringVar(&applicationConfig, "config", "config.json", "application configuration file")
-
-	flag.Parse()
-	return applicationConfig
 }

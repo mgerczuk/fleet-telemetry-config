@@ -108,7 +108,7 @@ func getUri(config config.Config, clientId string, scope string, state string) s
 	params := url.Values{
 		"response_type": {"code"},
 		"client_id":     {clientId},
-		"redirect_uri":  {GetRedirectUri(config.PublicHostname)},
+		"redirect_uri":  {GetRedirectUri(config.PublicServer.Hostname)},
 		"scope":         {scope},
 		"state":         {state},
 	}

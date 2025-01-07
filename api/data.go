@@ -32,12 +32,9 @@ func getConfig(configData config.Config) http.HandlerFunc {
 }
 
 func getApplication(w http.ResponseWriter, r *http.Request) {
-	data, err := config.GetPersist()
 
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	switch method := r.Method; method {
 	case "GET":
@@ -65,12 +62,9 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 }
 
 func getKeys(w http.ResponseWriter, r *http.Request) {
-	data, err := config.GetPersist()
 
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	switch method := r.Method; method {
 	case "GET":
@@ -155,11 +149,8 @@ func createKeys() (privateKeyPEM string, publicKeyPEM string, err error) {
 
 func handleUsers(w http.ResponseWriter, r *http.Request) {
 
-	data, err := config.GetPersist()
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	switch method := r.Method; method {
 	case "GET":
@@ -207,11 +198,8 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 
 func getTokenExpires(w http.ResponseWriter, r *http.Request) {
 
-	data, err := config.GetPersist()
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	userId := r.URL.Query().Get("uid")
 	if userId == "" {
@@ -242,11 +230,8 @@ func getTokenExpires(w http.ResponseWriter, r *http.Request) {
 
 func getTelemetryConfig(w http.ResponseWriter, r *http.Request) {
 
-	data, err := config.GetPersist()
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	switch method := r.Method; method {
 	case "GET":
@@ -278,11 +263,8 @@ func getTelemetryConfig(w http.ResponseWriter, r *http.Request) {
 
 func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 
-	data, err := config.GetPersist()
-	if err != nil {
-		http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-		return
-	}
+	data := config.LockPersist()
+	defer data.Unlock()
 
 	w.Header().Set("content-Type", "application/x-pem-file")
 	w.Write([]byte(data.Keys.PublicKey))

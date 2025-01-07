@@ -16,28 +16,26 @@ type registerParams struct {
 
 func Register(configData config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := config.GetPersist()
-		if err != nil {
-			http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-			return
-		}
+
+		data := config.LockPersist()
+		defer data.Unlock()
 
 		var params registerParams
-		err = json.NewDecoder(r.Body).Decode(&params)
+		err := json.NewDecoder(r.Body).Decode(&params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		fmt.Printf("data = %v", data)
-		fleetToken, err := tesla_api.GetClientCredentials(data.Application.ClientId, *data.Application.ClientSecret, configData.Audience, params.Scope)
+		fleetToken, err := tesla_api.GetClientCredentials(data.Application.ClientId, *data.Application.ClientSecret, data.Application.Audience, params.Scope)
 		fmt.Printf("cred = %v", fleetToken)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		t2, err := tesla_api.Register(configData.Audience, fleetToken.AccessToken, configData.PublicHostname)
+		t2, err := tesla_api.Register(data.Application.Audience, fleetToken.AccessToken, configData.PublicServer.Hostname)
 		fmt.Println(err)
 		fmt.Println(t2)
 		if err != nil {
@@ -49,17 +47,15 @@ func Register(configData config.Config) http.HandlerFunc {
 
 func GetInitialToken(configData config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := config.GetPersist()
-		if err != nil {
-			http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-			return
-		}
+
+		data := config.LockPersist()
+		defer data.Unlock()
 
 		var params struct {
 			Uid  string `json:"uid"`
 			Code string `json:"code"`
 		}
-		err = json.NewDecoder(r.Body).Decode(&params)
+		err := json.NewDecoder(r.Body).Decode(&params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -71,7 +67,7 @@ func GetInitialToken(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		fleetToken, err := tesla_api.GetAuthorizationCode(data.Application.ClientId, *data.Application.ClientSecret, configData.Audience, params.Code, auth.GetRedirectUri(configData.PublicHostname))
+		fleetToken, err := tesla_api.GetAuthorizationCode(data.Application.ClientId, *data.Application.ClientSecret, data.Application.Audience, params.Code, auth.GetRedirectUri(configData.PublicServer.Hostname))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -87,16 +83,13 @@ func GetInitialToken(configData config.Config) http.HandlerFunc {
 func RefreshToken(configData config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data, err := config.GetPersist()
-		if err != nil {
-			http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-			return
-		}
+		data := config.LockPersist()
+		defer data.Unlock()
 
 		var params struct {
 			Uid string `json:"uid"`
 		}
-		err = json.NewDecoder(r.Body).Decode(&params)
+		err := json.NewDecoder(r.Body).Decode(&params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

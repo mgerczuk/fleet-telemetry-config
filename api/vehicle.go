@@ -13,11 +13,8 @@ import (
 func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data, err := config.GetPersist()
-		if err != nil {
-			http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-			return
-		}
+		data := config.LockPersist()
+		defer data.Unlock()
 
 		var params struct {
 			Uid    string   `json:"uid"`
@@ -29,7 +26,7 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 				Fields     map[string]tesla_api.FieldProp `json:"fields"`
 			} `json:"config"`
 		}
-		err = json.NewDecoder(r.Body).Decode(&params)
+		err := json.NewDecoder(r.Body).Decode(&params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -53,16 +50,16 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 		telemetryConfig.AlertTypes = params.Config.AlertTypes
 		telemetryConfig.Fields = params.Config.Fields
 
-		telemetryConfig.Hostname = configData.PublicHostname
+		telemetryConfig.Hostname = configData.PublicServer.Hostname
 
-		buf, err := os.ReadFile(configData.PublicCert)
+		buf, err := os.ReadFile(configData.PublicServer.Cert)
 		if err != nil {
 			http.Error(w, "cannot access cert", http.StatusInternalServerError)
 			return
 		}
 		telemetryConfig.Ca = string(buf)
 
-		client := tesla_api.NewVehicleClient(configData.Audience, user.Token.AccessToken)
+		client := tesla_api.NewVehicleClient(data.Application.Audience, user.Token.AccessToken)
 		res, err := client.CreateFleetTelemetryConfig(&telemetryConfig, params.Vins, data.Keys.PrivateKey)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -76,11 +73,8 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 func VehicleTelemetryConfig(configData config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		data, err := config.GetPersist()
-		if err != nil {
-			http.Error(w, "cannot access persistent data", http.StatusInternalServerError)
-			return
-		}
+		data := config.LockPersist()
+		defer data.Unlock()
 
 		uid := r.URL.Query().Get("uid")
 		if uid == "" {
@@ -105,7 +99,7 @@ func VehicleTelemetryConfig(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		client := tesla_api.NewVehicleClient(configData.Audience, user.Token.AccessToken)
+		client := tesla_api.NewVehicleClient(data.Application.Audience, user.Token.AccessToken)
 
 		switch method := r.Method; method {
 		case "GET":
