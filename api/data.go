@@ -50,6 +50,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		data.Application.AppName = app.AppName
 		data.Application.ClientId = app.ClientId
 		data.Application.ClientSecret = app.ClientSecret
+		data.Application.Audience = app.Audience
 		err = config.PutPersist(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -266,6 +267,5 @@ func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 	data := config.LockPersist()
 	defer data.Unlock()
 
-	w.Header().Set("content-Type", "application/x-pem-file")
 	w.Write([]byte(data.Keys.PublicKey))
 }
