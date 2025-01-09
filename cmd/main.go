@@ -55,13 +55,6 @@ func main() {
 		Addr:    fmt.Sprintf(":%v", configData.PublicServer.Port),
 		Handler: muxPublic,
 		TLSConfig: &tls.Config{
-			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
-				newCert, err := tls.LoadX509KeyPair(configData.PublicServer.Cert, configData.PublicServer.Key)
-				if err != nil {
-					return nil, err
-				}
-				return &newCert, nil
-			},
 			MinVersion: tls.VersionTLS12, // improves cert reputation score at https://www.ssllabs.com/ssltest/
 		},
 	}
@@ -73,7 +66,7 @@ func main() {
 
 	go func() {
 		log.Infof("Public server started on port %v", configData.PublicServer.Port)
-		panic(publicServer.ListenAndServeTLS("", ""))
+		panic(publicServer.ListenAndServeTLS(configData.PublicServer.Cert, configData.PublicServer.Key))
 	}()
 
 	go func() {

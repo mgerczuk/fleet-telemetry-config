@@ -93,6 +93,10 @@
             <td />
             <td><button type="button" onclick="register()" class="w3-button w3-light-blue">Register</button></td>
         </tr>
+        <tr>
+            <td />
+            <td><span id="register-result"></span></td>
+        </tr>
     </table>
 
     <script type="text/javascript" src="tools.js"></script>
@@ -127,7 +131,9 @@
                 scope: document.getElementById("scope_register").value
             });
 
-            postData("/api/register", formData)
+            postData("/api/register", formData, function (statusCode, bodyText) {
+                document.getElementById("register-result").textContent = bodyText
+            })
         }
 
         function createNewKeys() {
