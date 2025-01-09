@@ -92,9 +92,7 @@
         function processConfigData(statusCode, bodyText) {
             var response = JSON.parse(bodyText);
 
-            console.log(response)
-            console.log(response.public_hostname)
-            s = "https://tesla.com/_ak/" + response.public_hostname
+            s = "https://tesla.com/_ak/" + response.public_server.hostname
             document.getElementById("pair").href = s
             document.getElementById("pair").innerHTML = s
         }
@@ -185,6 +183,7 @@
         function deleteConfig() {
 
             const params = new URLSearchParams({
+                uid: uid,
                 vin: document.getElementById("vin").value
             });
 
