@@ -5,6 +5,14 @@
 
 <body>
 
+    <h1>Domain</h1>
+
+    <p>Your public server must be accessible at https://<span id="hostname"></span> on port 443.</p>
+
+    <p><button type="button" onClick="testServer()" class="w3-button w3-light-blue">Test Server</button><br />
+        <span id="test-server-result"></span>
+    </p>
+
     <h1>Setup Application</h1>
 
     <p>Setup a Tesla developer account and an application.</p>
@@ -39,8 +47,57 @@
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
         document.addEventListener("DOMContentLoaded", () => {
+            getData("/api/data/config", processConfig)
             getData("/api/data/users", processUsers)
+
+            const url = `https://tesla.mgsoftware.de/.well-known/appspecific/challenge`
+            console.log(url)
+
+            getData(url)
         });
+
+        function processConfig(statusCode, bodyText) {
+            var response = JSON.parse(bodyText);
+
+            document.getElementById("hostname").textContent = response.public_server.hostname
+        }
+
+        function testServer() {
+
+            document.getElementById("test-server-result").textContent = "wait..."
+
+            var rnd = window.crypto.randomUUID()
+            var param = { challenge: rnd }
+            postData("/api/data/challenge", JSON.stringify(param), function (statusCode, body) {
+                console.log(`POST: statusCode = ${statusCode}, body = ${body}`)
+
+                if (statusCode != 200) {
+                    document.getElementById("test-server-result").textContent = "Internal error"
+                }
+                else {
+                    const url = `https://${document.getElementById("hostname").textContent}/.well-known/appspecific/challenge`
+                    console.log(url)
+
+                    getData(url, function (statusCode2, body2) {
+                        console.log(`statusCode = ${statusCode2}, body = ${body2}`)
+                        if (statusCode2 == 200) {
+                            var response = JSON.parse(body2);
+                            if (response.challenge == rnd) {
+                                document.getElementById("test-server-result").textContent = "Ok!"
+                            }
+                            else {
+                                document.getElementById("test-server-result").textContent = "Data differs. Maybe not handled by this utility?"
+                            }
+                        }
+                        else {
+                            document.getElementById("test-server-result").textContent = `Error code ${statusCode2}: ${body2}`
+                        }
+                    })
+
+                }
+            })
+
+        }
 
         function processUsers(statusCode, bodyText) {
             if (statusCode != 200) {

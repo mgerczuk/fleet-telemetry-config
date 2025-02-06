@@ -23,6 +23,7 @@ func HandleDataModel(muxPrivate *http.ServeMux, configData *config.Config) {
 	muxPrivate.HandleFunc("/api/data/users", handleUsers)
 	muxPrivate.HandleFunc("GET /api/data/token_expires", getTokenExpires)
 	muxPrivate.HandleFunc("/api/data/telemetry_config", getTelemetryConfig)
+	muxPrivate.HandleFunc("POST /api/data/challenge", postChallenge)
 }
 
 func getConfig(configData config.Config) http.HandlerFunc {
@@ -260,6 +261,31 @@ func getTelemetryConfig(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
 	}
+}
+
+var lastChallenge string
+
+func postChallenge(w http.ResponseWriter, r *http.Request) {
+
+	var param struct {
+		Challenge string `json:"challenge"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&param)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	lastChallenge = param.Challenge
+}
+
+func GetChallenge(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	response := map[string]string{
+		"challenge": lastChallenge,
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func GetPublicKey(w http.ResponseWriter, r *http.Request) {

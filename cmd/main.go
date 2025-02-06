@@ -32,11 +32,12 @@ func main() {
 	}
 
 	muxPublic := http.NewServeMux()
-	muxPublic.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+	muxPublic.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("User-agent: *\nDisallow: /\n"))
 	})
 	muxPublic.HandleFunc("/auth/callback", auth.CodeCallback)
-	muxPublic.HandleFunc("/.well-known/appspecific/com.tesla.3p.public-key.pem", api.GetPublicKey)
+	muxPublic.HandleFunc("GET /.well-known/appspecific/com.tesla.3p.public-key.pem", api.GetPublicKey)
+	muxPublic.HandleFunc("GET /.well-known/appspecific/challenge", api.GetChallenge)
 
 	fs := http.FileServer(http.Dir(configData.PrivateServer.WebRoot))
 
