@@ -50,7 +50,6 @@ func main() {
 	muxPrivate.HandleFunc("POST /api/register", api.Register(*configData))
 	muxPrivate.HandleFunc("/auth/request", auth.StartAuth(*configData))
 	muxPrivate.HandleFunc("POST /api/initial_token", api.GetInitialToken(*configData))
-	muxPrivate.HandleFunc("POST /api/refresh_token", api.RefreshToken(*configData))
 
 	publicServer := &http.Server{
 		Addr:    fmt.Sprintf(":%v", configData.PublicServer.Port),

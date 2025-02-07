@@ -35,26 +35,24 @@
 
     <p>Current token expires at <span id="expires_at"></span></p>
 
-    <p><button type="button" onclick="refresh()" class="w3-button w3-light-blue">Refresh Token</button></p>
-
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
 
-        var params = new URL(document.location.toString()).searchParams;
-        var uid = params.get("uid");
+        var params = new URL(document.location.toString()).searchParams
+        var uid = params.get("uid")
         console.log("uid=" + uid)
 
         document.addEventListener("DOMContentLoaded", () => {
             getData("/api/data/application", processApplicationData)
             getData("/api/data/token_expires?uid=" + uid)
 
-            params = new URL(document.location.toString()).searchParams;
-            authCode = params.get("auth_code");
+            params = new URL(document.location.toString()).searchParams
+            authCode = params.get("auth_code")
             console.log("auth_code=" + authCode)
             if (authCode != null) {
                 onCodeReceived(authCode)
             }
-        });
+        })
 
         function processApplicationData(statusCode, bodyText) {
             var response = JSON.parse(bodyText)
@@ -88,16 +86,6 @@
                 url.searchParams.delete("auth_code")
                 console.log(url.href)
                 window.location.href = url.href
-            });
-        }
-
-        function refresh() {
-            var param = {
-                uid: uid
-            }
-
-            postData("/api/refresh_token", JSON.stringify(param), function (code, body) {
-                getData("/api/data/token_expires?uid=" + uid)
             })
         }
 

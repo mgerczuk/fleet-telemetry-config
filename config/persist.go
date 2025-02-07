@@ -25,7 +25,7 @@ type Keys struct {
 }
 
 type User struct {
-	Name string `json:"name"`
+	Name  string                `json:"name"`
 	Token *tesla_api.FleetToken `json:"token,omitempty"`
 }
 

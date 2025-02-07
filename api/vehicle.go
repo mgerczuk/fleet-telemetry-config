@@ -2,9 +2,11 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/mgerczuk/fleet-telemetry-config/config"
 	"github.com/mgerczuk/fleet-telemetry-config/tesla_api"
@@ -32,14 +34,9 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		user, exists := data.Users[params.Uid]
-		if !exists {
-			http.Error(w, fmt.Sprintf("uid '%s' not found", params.Uid), http.StatusNotFound)
-			return
-		}
-
-		if user.Token == nil {
-			http.Error(w, "no token available. Create at /auth/request", http.StatusInternalServerError)
+		token, err := GetValidAccessToken(data, params.Uid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -59,7 +56,7 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 		}
 		telemetryConfig.Ca = string(buf)
 
-		client := tesla_api.NewVehicleClient(data.Application.Audience, user.Token.AccessToken)
+		client := tesla_api.NewVehicleClient(data.Application.Audience, token)
 		res, err := client.CreateFleetTelemetryConfig(&telemetryConfig, params.Vins, data.Keys.PrivateKey)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -82,14 +79,9 @@ func VehicleTelemetryConfig(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		user, exists := data.Users[uid]
-		if !exists {
-			http.Error(w, fmt.Sprintf("uid '%s' not found", uid), http.StatusNotFound)
-			return
-		}
-
-		if user.Token == nil {
-			http.Error(w, "no token available. Create at /auth/request", http.StatusInternalServerError)
+		token, err := GetValidAccessToken(data, uid)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -99,7 +91,7 @@ func VehicleTelemetryConfig(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		client := tesla_api.NewVehicleClient(data.Application.Audience, user.Token.AccessToken)
+		client := tesla_api.NewVehicleClient(data.Application.Audience, token)
 
 		switch method := r.Method; method {
 		case "GET":
@@ -122,4 +114,31 @@ func VehicleTelemetryConfig(configData config.Config) http.HandlerFunc {
 			http.Error(w, "invalid method", http.StatusMethodNotAllowed)
 		}
 	}
+}
+
+func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
+
+	user, exists := data.Users[uid]
+	if !exists {
+		return "", errors.New(fmt.Sprintf("uid '%s' not found", uid))
+	}
+
+	if user.Token == nil {
+		return "", errors.New("no token available. Create at /auth/request")
+	}
+
+	expires := user.Token.CreatedAt
+	expires.Add(time.Second * time.Duration(user.Token.ExpiresIn))
+	expires.Add(time.Minute * -10)
+
+	if expires.Before(time.Now()) {
+		t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
+		if err != nil {
+			return "", err
+		}
+		user.Token = t
+		config.PutPersist(data)
+	}
+
+	return user.Token.AccessToken, nil
 }

@@ -12,10 +12,6 @@
 
     <p><a href="https://developer.tesla.com/docs/fleet-api/fleet-telemetry">Original Documentation</a></p>
 
-    <p>Current token expires at <span id="expires_at"></span></p>
-
-    <p><button type="button" onclick="refresh()" class="w3-button w3-light-blue">Refresh Token</button></p>
-
     <h2>Pairing a Key</h2>
 
     <p>To pair a key to the vehicle go to <a id="pair"
@@ -78,19 +74,18 @@
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
 
-        var params = new URL(document.location.toString()).searchParams;
-        var uid = params.get("uid");
+        var params = new URL(document.location.toString()).searchParams
+        var uid = params.get("uid")
         console.log("uid=" + uid)
 
         document.addEventListener("DOMContentLoaded", () => {
             getData("/api/data/config", processConfigData)
             getData("/api/data/application", processApplicationData)
-            getData("/api/data/token_expires?uid=" + uid)
             getData("/api/data/telemetry_config", processTelemetryConfig)
-        });
+        })
 
         function processConfigData(statusCode, bodyText) {
-            var response = JSON.parse(bodyText);
+            var response = JSON.parse(bodyText)
 
             s = "https://tesla.com/_ak/" + response.public_server.hostname
             document.getElementById("pair").href = s
@@ -105,23 +100,13 @@
         }
 
         function processTelemetryConfig(statusCode, bodyText) {
-            var config = JSON.parse(bodyText);
+            var config = JSON.parse(bodyText)
             delete config.config.ca
             delete config.config.hostname
             delete config.config.xyz
 
             document.getElementById("vins").value = config.vins.join("\n")
             document.getElementById("config").value = JSON.stringify(config.config, null, 3)
-        }
-
-        function refresh() {
-            var param = {
-                uid: uid
-            }
-
-            postData("/api/refresh_token", JSON.stringify(param), function (code, body) {
-                getData("/api/data/token_expires?uid=" + uid)
-            })
         }
 
         function save() {
@@ -162,7 +147,7 @@
             const params = new URLSearchParams({
                 uid: uid,
                 vin: document.getElementById("vin").value
-            });
+            })
             console.log(params.toString())
 
 
@@ -185,7 +170,7 @@
             const params = new URLSearchParams({
                 uid: uid,
                 vin: document.getElementById("vin").value
-            });
+            })
 
             deleteData(
                 "/api/vehicle_telemetry_config?" + params.toString(),
