@@ -15,6 +15,8 @@
 
     <h2>Step 1: User Authorization</h2>
 
+    <p>To initiate the authorization code flow select the scopes and click the <b>Authorize</b> button below.</p>
+
     <table>
         <tr>
             <td>Scope:</td>
@@ -29,7 +31,8 @@
 
     <h2>Step 2: Callback</h2>
 
-    <p>After the user authorizes their account with Tesla, they will be redirected to the specified redirect_uri.</p>
+    <p>After the user authorizes their account with Tesla, they will be redirected to this page. The <b>code</b>
+        parameter will be automatically extracted and the code exchange will be initiated.</p>
 
     <h2>Step 3: Code Exchange</h2>
 
@@ -40,7 +43,8 @@
 
         var params = new URL(document.location.toString()).searchParams
         var uid = params.get("uid")
-        console.log("uid=" + uid)
+        var lastAuthCode = null
+        console.log("lastAuthCode=" + lastAuthCode)
 
         document.addEventListener("DOMContentLoaded", () => {
             getData("/api/data/application", processApplicationData)
@@ -49,7 +53,8 @@
             params = new URL(document.location.toString()).searchParams
             authCode = params.get("auth_code")
             console.log("auth_code=" + authCode)
-            if (authCode != null) {
+            if (authCode != lastAuthCode) {
+                lastAuthCode = authCode
                 onCodeReceived(authCode)
             }
         })
@@ -77,9 +82,12 @@
                 "code": code
             }
             postData("/api/initial_token", JSON.stringify(params), function (statusCode, bodyText) {
-                console.log(statusCode + " " + bodyText)
+
                 if (statusCode >= 400) {
                     alert("Initial token failed:\n" + bodyText)
+                }
+                else {
+                    alert("Initial token successfully received!")
                 }
 
                 url = new URL(document.location.toString())
