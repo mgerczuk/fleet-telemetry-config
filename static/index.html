@@ -49,15 +49,10 @@
         document.addEventListener("DOMContentLoaded", () => {
             getData("/api/data/config", processConfig)
             getData("/api/data/users", processUsers)
-
-            const url = `https://tesla.mgsoftware.de/.well-known/appspecific/challenge`
-            console.log(url)
-
-            getData(url)
-        });
+        })
 
         function processConfig(statusCode, bodyText) {
-            var response = JSON.parse(bodyText);
+            var response = JSON.parse(bodyText)
 
             document.getElementById("hostname").textContent = response.public_server.hostname
         }
@@ -66,7 +61,7 @@
 
             document.getElementById("test-server-result").textContent = "wait..."
 
-            var rnd = window.crypto.randomUUID()
+            var rnd = Math.random().toString(36).substring(2)
             var param = { challenge: rnd }
             postData("/api/data/challenge", JSON.stringify(param), function (statusCode, body) {
                 console.log(`POST: statusCode = ${statusCode}, body = ${body}`)
@@ -81,7 +76,7 @@
                     getData(url, function (statusCode2, body2) {
                         console.log(`statusCode = ${statusCode2}, body = ${body2}`)
                         if (statusCode2 == 200) {
-                            var response = JSON.parse(body2);
+                            var response = JSON.parse(body2)
                             if (response.challenge == rnd) {
                                 document.getElementById("test-server-result").textContent = "Ok!"
                             }
@@ -108,16 +103,16 @@
             var users = JSON.parse(bodyText)
             console.log("users=" + users.toString())
 
-            var table = document.getElementById('users');
-            table.innerHTML = "";
+            var table = document.getElementById('users')
+            table.innerHTML = ""
             users.forEach(user => {
-                var tr = document.createElement('tr');
-                var html = "<td>" + user.name + "</td>";
+                var tr = document.createElement('tr')
+                var html = "<td>" + user.name + "</td>"
                 html = html + "<td><a href='tokens.html?uid=" + user.uid + "' class='w3-button w3-light-blue'>Token</a></td>"
                 html = html + "<td><a href='configure.html?uid=" + user.uid + "' class='w3-button w3-light-blue'>Configure</a></td>"
-                tr.innerHTML = html;
-                table.appendChild(tr);
-            });
+                tr.innerHTML = html
+                table.appendChild(tr)
+            })
         }
 
         function addUser() {
