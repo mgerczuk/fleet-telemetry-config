@@ -5,8 +5,10 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/mgerczuk/fleet-telemetry-config/tesla_api"
+	log "github.com/sirupsen/logrus"
 )
 
 type Application struct {
@@ -24,9 +26,57 @@ type Keys struct {
 	PublicKey  string `json:"public_key,omitempty"`
 }
 
+const refreshDays = 60
+
 type User struct {
 	Name  string                `json:"name"`
 	Token *tesla_api.FleetToken `json:"token,omitempty"`
+
+	timer *time.Timer
+}
+
+func (u *User) SetToken(t *tesla_api.FleetToken) {
+	u.Token = t
+	u.startRefreshTimer()
+}
+
+func (u *User) startRefreshTimer() {
+
+	expires := u.Token.CreatedAt.Add(time.Hour * (24 * refreshDays))
+
+	if u.timer != nil {
+		u.timer.Stop()
+		u.timer = nil
+	}
+
+	if time.Now().After(expires) {
+		u.doRefreshToken()
+	} else {
+		duration := time.Until(expires)
+		log.Infof("Token refresh in %v", duration)
+
+		u.timer = time.AfterFunc(duration, func() {
+			u.doRefreshToken()
+		})
+	}
+}
+
+func (u *User) doRefreshToken() {
+
+	log.Infof("Automatic token refresh before refresh token expires")
+
+	// this relies on the fact that the persistent data is a singleton und u is
+	// an element of data.Users!
+	data := LockPersist()
+	defer data.Unlock()
+
+	t, err := tesla_api.RefreshToken(data.Application.ClientId, u.Token.RefreshToken)
+	if err != nil {
+		return
+	}
+	u.SetToken(t)
+
+	PutPersist(data)
 }
 
 type FleetTelemetryConfig struct {
@@ -70,6 +120,11 @@ func InitPersist(persistFile string) error {
 	}
 
 	singleton = &persistData
+
+	for _, u := range singleton.Users {
+		u.startRefreshTimer()
+	}
+
 	return nil
 }
 

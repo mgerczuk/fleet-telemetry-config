@@ -136,7 +136,7 @@ func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		user.Token = t
+		user.SetToken(t)
 		config.PutPersist(data)
 	}
 

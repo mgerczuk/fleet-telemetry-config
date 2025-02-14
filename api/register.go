@@ -80,7 +80,7 @@ func GetInitialToken(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		user.Token = fleetToken
+		user.SetToken(fleetToken)
 		config.PutPersist(data)
 
 		json.NewEncoder(w).Encode(fleetToken)
