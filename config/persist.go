@@ -42,6 +42,10 @@ func (u *User) SetToken(t *tesla_api.FleetToken) {
 
 func (u *User) startRefreshTimer() {
 
+	if u.Token == nil {
+		return
+	}
+
 	expires := u.Token.CreatedAt.Add(time.Hour * (24 * refreshDays))
 
 	if u.timer != nil {
