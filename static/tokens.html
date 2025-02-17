@@ -8,14 +8,12 @@
 
     <a href="index.html">zurück</a>
 
-    <h1>Third Party Tokens</h1>
+    <h1>Get Token</h1>
 
     <p><a href="https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens">Original Documentation</a>
     </p>
 
-    <h2>Step 1: User Authorization</h2>
-
-    <p>To initiate the authorization code flow select the scopes and click the <b>Authorize</b> button below.</p>
+    <p>Login to your Tesla account to retrieve the access token:</p>
 
     <table>
         <tr>
@@ -29,14 +27,15 @@
         </tr>
     </table>
 
-    <h2>Step 2: Callback</h2>
+    <p>Current token expires at <i><span id="expires_at"></span></i></p>
 
-    <p>After the user authorizes their account with Tesla, they will be redirected to this page. The <b>code</b>
-        parameter will be automatically extracted and the code exchange will be initiated.</p>
+    <h1>Pair Key</h1>
 
-    <h2>Step 3: Code Exchange</h2>
+    <p><a href="https://developer.tesla.com/docs/fleet-api/fleet-telemetry">Original Documentation</a></p>
 
-    <p>Current token expires at <span id="expires_at"></span></p>
+    <p>To pair the key to the vehicle go to <a id="pair" href="https://tesla.com/_ak/developer-domain.com">
+            https://tesla.com/_ak/&lt;developer-domain.com&gt;</a>
+    </p>
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
@@ -49,6 +48,7 @@
         document.addEventListener("DOMContentLoaded", () => {
             getData("/api/data/application", processApplicationData)
             getData("/api/data/token_expires?uid=" + uid)
+            getData("/api/data/config", processConfigData)
 
             params = new URL(document.location.toString()).searchParams
             authCode = params.get("auth_code")
@@ -64,6 +64,14 @@
             console.log(response)
 
             document.getElementById("client_id").value = response.client_id
+        }
+
+        function processConfigData(statusCode, bodyText) {
+            var response = JSON.parse(bodyText)
+
+            s = "https://tesla.com/_ak/" + response.public_server.hostname
+            document.getElementById("pair").href = s
+            document.getElementById("pair").innerHTML = s
         }
 
         function authorize() {
