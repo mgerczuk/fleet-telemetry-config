@@ -12,6 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var version = "local build"
+
 func main() {
 
 	var applicationConfig string
@@ -19,7 +21,13 @@ func main() {
 
 	flag.StringVar(&applicationConfig, "config", "config.json", "application configuration file")
 	flag.StringVar(&persistFile, "persist", "persist.json", "application persistent data")
+	showVersion := flag.Bool("version", false, "show version and exit")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("fleet-telemetry-config version %s\n", version)
+		return
+	}
 
 	configData, err := config.LoadApplicationConfiguration(applicationConfig)
 	if err != nil {
