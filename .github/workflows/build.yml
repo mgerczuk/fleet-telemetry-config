@@ -24,6 +24,11 @@ jobs:
       with:
         go-version: '1.23.6'
 
+    - name: Install needed Tools
+      uses: ConorMacBride/install-package@v1
+      with:
+        apt: fakeroot
+          
     - name: Install Dependencies
       run: go mod tidy
 
