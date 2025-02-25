@@ -13,6 +13,8 @@ export GO111MODULE = on
 # Cross-Compilation Flags
 LDFLAGS := -s -w
 
+.PHONY: clean build package
+
 all: clean build package
 
 build:
@@ -34,12 +36,16 @@ package:
 		mkdir -p $(DEB_DIR)/usr/bin; \
 		cp $(BUILD_DIR)/$(APP_NAME)_$$arch $(DEB_DIR)/usr/bin/$(APP_NAME); \
 		chmod 755 $(DEB_DIR)/usr/bin/$(APP_NAME); \
-		echo "Package: $(APP_NAME)" > $(DEB_DIR)/DEBIAN/control; \
+		cp -r package/* $(DEB_DIR)/; \
 		echo "Version: $(VERSION)" >> $(DEB_DIR)/DEBIAN/control; \
 		echo "Architecture: $$deb_arch" >> $(DEB_DIR)/DEBIAN/control; \
-		echo "Maintainer: Martin Gerczuk <martin@mgsoftware.de>" >> $(DEB_DIR)/DEBIAN/control; \
-		echo "Description: Tesla Fleet Telemetry Configuration" >> $(DEB_DIR)/DEBIAN/control; \
-		dpkg-deb --build $(DEB_DIR) $(BUILD_DIR)/$(APP_NAME)_$(VERSION)_$$arch.deb; \
+		chmod 755 $(DEB_DIR)/DEBIAN/config; \
+		chmod 755 $(DEB_DIR)/DEBIAN/postinst; \
+		chmod 755 $(DEB_DIR)/DEBIAN/prerm; \
+		chmod 755 $(DEB_DIR)/DEBIAN/postrm; \
+		mkdir -p $(DEB_DIR)/etc/fleet-telemetry-config/www-root; \
+		cp -r static/* $(DEB_DIR)/etc/fleet-telemetry-config/www-root/; \
+		fakeroot dpkg-deb --build $(DEB_DIR) $(BUILD_DIR)/$(APP_NAME)_$(VERSION)_$$arch.deb; \
 		rm -rf $(DEB_DIR); \
 	done
 

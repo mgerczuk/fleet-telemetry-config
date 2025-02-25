@@ -1,0 +1,6 @@
+Package: fleet-telemetry-config
+Depends: systemd, debconf
+Maintainer: Martin Gerczuk <martin@mgsoftware.de>
+Description: Tesla Fleet Telemetry Configuration
+Section: admin
+Priority: optional

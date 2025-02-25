@@ -1,0 +1,51 @@
+#!/bin/bash
+set -e
+. /usr/share/debconf/confmodule
+
+CONFIG_FILE="/etc/fleet-telemetry-config/config.json"
+OVERRIDE_FILE="/etc/systemd/system/fleet-telemetry-config.service.d/override.conf"
+
+# Only if not yet existing or empty
+if [ ! -s "$CONFIG_FILE" ]; then
+
+    db_get fleet-telemetry-config/public_server_hostname
+    PUBLIC_SERVER_HOSTNAME="$RET"
+
+    db_get fleet-telemetry-config/public_server_port
+    PUBLIC_SERVER_PORT="$RET"
+
+    mkdir -p /etc/fleet-telemetry-config
+    cat <<EOF > "$CONFIG_FILE"
+{
+    "public_server": {
+        "hostname": "$PUBLIC_SERVER_HOSTNAME",
+        "port": $PUBLIC_SERVER_PORT,
+        "cert": "/run/credentials/fleet-telemetry-config.service/fullchain.pem",
+        "key": "/run/credentials/fleet-telemetry-config.service/privkey.pem"
+    },
+    "private_server": {
+        "port": 8081,
+        "web_root": "/etc/fleet-telemetry-config/www-root"
+    }
+}
+EOF
+    echo "Config file created: $CONFIG_FILE"
+
+    # replace Let's Encrypt path
+    mkdir -p $(dirname "${OVERRIDE_FILE}")
+    cat <<EOF > "$OVERRIDE_FILE"
+[Service]
+LoadCredential=privkey.pem:/etc/letsencrypt/live/$PUBLIC_SERVER_HOSTNAME/privkey.pem
+LoadCredential=fullchain.pem:/etc/letsencrypt/live/$PUBLIC_SERVER_HOSTNAME/fullchain.pem
+EOF
+    echo "Override file created: /etc/systemd/system/fleet-telemetry-config.service.d/override.conf"
+
+fi
+
+# Start service
+if [ "$1" = "configure" ]; then
+    systemctl daemon-reload
+    systemctl enable fleet-telemetry-config.service
+    systemctl restart fleet-telemetry-config.service
+fi
+

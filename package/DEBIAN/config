@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+. /usr/share/debconf/confmodule
+
+db_input high fleet-telemetry-config/public_server_hostname || true
+db_input high fleet-telemetry-config/public_server_port || true
+
+db_go || true

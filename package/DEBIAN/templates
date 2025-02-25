@@ -1,0 +1,11 @@
+Template: fleet-telemetry-config/public_server_hostname
+Type: string
+Default: my-domain.com
+Description: Enter public server hostname
+
+Template: fleet-telemetry-config/public_server_port
+Type: string
+Default: 443
+Description: Enter public server port
+ Usually this is 443 but the service is NOT running as root, so you may have
+ to choose a different port and use redirection
