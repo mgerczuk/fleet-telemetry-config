@@ -9,6 +9,7 @@ import (
 	"github.com/mgerczuk/fleet-telemetry-config/api"
 	"github.com/mgerczuk/fleet-telemetry-config/auth"
 	"github.com/mgerczuk/fleet-telemetry-config/config"
+	"github.com/mgerczuk/fleet-telemetry-config/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,7 +62,7 @@ func main() {
 
 	publicServer := &http.Server{
 		Addr:    fmt.Sprintf(":%v", configData.PublicServer.Port),
-		Handler: muxPublic,
+		Handler: util.HttpLogHandler(muxPublic),
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12, // improves cert reputation score at https://www.ssllabs.com/ssltest/
 		},
