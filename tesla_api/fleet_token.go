@@ -9,6 +9,9 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	log "github.com/sirupsen/logrus"
 )
 
 // https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens
@@ -16,15 +19,40 @@ import (
 const urlToken = "https://fleet-auth.prd.vn.cloud.tesla.com/oauth2/v3/token"
 
 type FleetToken struct {
-	AccessToken  string    `json:"access_token"`
-	IDToken      string    `json:"id_token"`
-	RefreshToken string    `json:"refresh_token"`
-	CreatedAt    time.Time `json:"created_at"`
-	ExpiresIn    int       `json:"expires_in"`
-	TokenType    string    `json:"token_type"`
+	AccessToken  string `json:"access_token"`
+	IDToken      string `json:"id_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
 }
 
-func getToken(params url.Values) (result *FleetToken, err error) {
+func (token FleetToken) IssuedAt() (*time.Time, error) {
+	token2, _, err := new(jwt.Parser).ParseUnverified(token.AccessToken, &jwt.RegisteredClaims{})
+	if err != nil {
+		return nil, err
+	}
+	d, err := token2.Claims.GetIssuedAt()
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("IssuedAt: %v", d)
+	return &d.Time, nil
+}
+
+func (token FleetToken) ExpirationTime() (*time.Time, error) {
+	token2, _, err := new(jwt.Parser).ParseUnverified(token.AccessToken, &jwt.RegisteredClaims{})
+	if err != nil {
+		return nil, err
+	}
+	d, err := token2.Claims.GetExpirationTime()
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("IssuedAt: %v", d)
+	return &d.Time, nil
+}
+
+func postTokenRequest(params url.Values) (result *FleetToken, err error) {
 
 	req, err := http.NewRequest("POST", urlToken, strings.NewReader(params.Encode()))
 	if err != nil {
@@ -48,7 +76,7 @@ func getToken(params url.Values) (result *FleetToken, err error) {
 		return nil, errors.New(string(bodyBytes))
 	}
 
-	r1 := FleetToken{CreatedAt: time.Now()}
+	var r1 FleetToken
 	err = json.Unmarshal(bodyBytes, &r1)
 	if err != nil {
 		fmt.Println(err)
@@ -69,7 +97,7 @@ func GetClientCredentials(clientId string, clientSecret string, audience string,
 		"scope":         {scope},
 	}
 
-	return getToken(params)
+	return postTokenRequest(params)
 }
 
 func GetAuthorizationCode(clientId string, clientSecret string, audience string, code string, redirectUrl string) (result *FleetToken, err error) {
@@ -83,7 +111,7 @@ func GetAuthorizationCode(clientId string, clientSecret string, audience string,
 		"redirect_uri":  {redirectUrl},
 	}
 
-	return getToken(params)
+	return postTokenRequest(params)
 }
 
 func RefreshToken(clientId string, refreshToken string) (result *FleetToken, err error) {
@@ -94,5 +122,5 @@ func RefreshToken(clientId string, refreshToken string) (result *FleetToken, err
 		"refresh_token": {refreshToken},
 	}
 
-	return getToken(params)
+	return postTokenRequest(params)
 }

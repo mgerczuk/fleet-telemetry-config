@@ -9,6 +9,7 @@ import (
 	"github.com/mgerczuk/fleet-telemetry-config/api"
 	"github.com/mgerczuk/fleet-telemetry-config/auth"
 	"github.com/mgerczuk/fleet-telemetry-config/config"
+	"github.com/mgerczuk/fleet-telemetry-config/teslalogger_api"
 	"github.com/mgerczuk/fleet-telemetry-config/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -59,6 +60,7 @@ func main() {
 	muxPrivate.HandleFunc("POST /api/register", api.Register(*configData))
 	muxPrivate.HandleFunc("/auth/request", auth.StartAuth(*configData))
 	muxPrivate.HandleFunc("POST /api/initial_token", api.GetInitialToken(*configData))
+	muxPrivate.HandleFunc("POST /teslaredirect/refresh_token.php", teslalogger_api.RefreshToken)
 
 	publicServer := &http.Server{
 		Addr:    fmt.Sprintf(":%v", configData.PublicServer.Port),

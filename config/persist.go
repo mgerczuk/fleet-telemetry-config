@@ -30,6 +30,7 @@ const refreshDays = 60
 
 type User struct {
 	Name  string                `json:"name"`
+	Vins  []string              `json:"vins"`
 	Token *tesla_api.FleetToken `json:"token,omitempty"`
 
 	timer *time.Timer
@@ -46,7 +47,8 @@ func (u *User) startRefreshTimer() {
 		return
 	}
 
-	expires := u.Token.CreatedAt.Add(time.Hour * (24 * refreshDays))
+	issuedAt, _ := u.Token.IssuedAt()
+	expires := issuedAt.Add(time.Hour * (24 * refreshDays))
 
 	if u.timer != nil {
 		u.timer.Stop()

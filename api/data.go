@@ -10,7 +10,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/mgerczuk/fleet-telemetry-config/config"
@@ -220,8 +219,7 @@ func getTokenExpires(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tm := user.Token.CreatedAt
-	tm = tm.Add(time.Duration(user.Token.ExpiresIn) * time.Second)
+	tm, _ := user.Token.ExpirationTime()
 
 	result := map[string]interface{}{
 		"expires_at": tm.String(),

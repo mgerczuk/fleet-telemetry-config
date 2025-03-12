@@ -106,11 +106,12 @@ func GetRedirectUri(public_hostName string) string {
 func getUri(config config.Config, clientId string, scope string, state string) string {
 
 	params := url.Values{
-		"response_type": {"code"},
-		"client_id":     {clientId},
-		"redirect_uri":  {GetRedirectUri(config.PublicServer.Hostname)},
-		"scope":         {scope},
-		"state":         {state},
+		"response_type":         {"code"},
+		"client_id":             {clientId},
+		"redirect_uri":          {GetRedirectUri(config.PublicServer.Hostname)},
+		"scope":                 {scope},
+		"state":                 {state},
+		"prompt_missing_scopes": {"true"},
 	}
 	x := urlAuthorize + "?" + params.Encode()
 	return x

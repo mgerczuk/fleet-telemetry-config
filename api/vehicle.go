@@ -127,7 +127,11 @@ func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
 		return "", errors.New("no token available. Create at /auth/request")
 	}
 
-	expires := user.Token.CreatedAt.Add(time.Second * time.Duration(user.Token.ExpiresIn)).Add(time.Minute * -10)
+	exp, err := user.Token.ExpirationTime()
+	if err != nil {
+		return "", err
+	}
+	expires := exp.Add(time.Minute * -10)
 
 	if expires.Before(time.Now()) {
 		t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
