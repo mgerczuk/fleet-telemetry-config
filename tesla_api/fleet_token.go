@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	log "github.com/sirupsen/logrus"
 )
 
 // https://developer.tesla.com/docs/fleet-api/authentication/third-party-tokens
@@ -35,7 +34,6 @@ func (token FleetToken) IssuedAt() (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("IssuedAt: %v", d)
 	return &d.Time, nil
 }
 
@@ -48,46 +46,45 @@ func (token FleetToken) ExpirationTime() (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("IssuedAt: %v", d)
 	return &d.Time, nil
 }
 
-func postTokenRequest(params url.Values) (result *FleetToken, err error) {
+func postTokenRequest(params url.Values) (statusCode int, result *FleetToken, err error) {
 
 	req, err := http.NewRequest("POST", urlToken, strings.NewReader(params.Encode()))
 	if err != nil {
-		return nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 
 	defer res.Body.Close()
 	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(string(bodyBytes))
+		return res.StatusCode, nil, errors.New(string(bodyBytes))
 	}
 
 	var r1 FleetToken
 	err = json.Unmarshal(bodyBytes, &r1)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 
-	return &r1, nil
+	return res.StatusCode, &r1, nil
 
 }
 
-func GetClientCredentials(clientId string, clientSecret string, audience string, scope string) (result *FleetToken, err error) {
+func GetClientCredentials(clientId string, clientSecret string, audience string, scope string) (statusCode int, result *FleetToken, err error) {
 
 	params := url.Values{
 		"grant_type":    {"client_credentials"},
@@ -100,7 +97,7 @@ func GetClientCredentials(clientId string, clientSecret string, audience string,
 	return postTokenRequest(params)
 }
 
-func GetAuthorizationCode(clientId string, clientSecret string, audience string, code string, redirectUrl string) (result *FleetToken, err error) {
+func GetAuthorizationCode(clientId string, clientSecret string, audience string, code string, redirectUrl string) (statusCode int, result *FleetToken, err error) {
 
 	params := url.Values{
 		"grant_type":    {"authorization_code"},
@@ -114,7 +111,7 @@ func GetAuthorizationCode(clientId string, clientSecret string, audience string,
 	return postTokenRequest(params)
 }
 
-func RefreshToken(clientId string, refreshToken string) (result *FleetToken, err error) {
+func RefreshToken(clientId string, refreshToken string) (statusCode int, result *FleetToken, err error) {
 
 	params := url.Values{
 		"grant_type":    {"refresh_token"},

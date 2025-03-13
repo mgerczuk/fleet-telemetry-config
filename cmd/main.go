@@ -26,8 +26,8 @@ func main() {
 	showVersion := flag.Bool("version", false, "show version and exit")
 	flag.Parse()
 
+	fmt.Printf("fleet-telemetry-config version %s\n", version)
 	if *showVersion {
-		fmt.Printf("fleet-telemetry-config version %s\n", version)
 		return
 	}
 

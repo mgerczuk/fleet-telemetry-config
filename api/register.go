@@ -33,11 +33,11 @@ func Register(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		fleetToken, err := tesla_api.GetClientCredentials(clientId, clientSecret, audience, params.Scope)
+		statusCode, fleetToken, err := tesla_api.GetClientCredentials(clientId, clientSecret, audience, params.Scope)
 		fmt.Printf("cred = %v", fleetToken)
 		if err != nil {
 			fmt.Printf("GetClientCredentials failed: %s", err.Error())
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), statusCode)
 			return
 		}
 
@@ -74,9 +74,9 @@ func GetInitialToken(configData config.Config) http.HandlerFunc {
 			return
 		}
 
-		fleetToken, err := tesla_api.GetAuthorizationCode(data.Application.ClientId, *data.Application.ClientSecret, data.Application.Audience, params.Code, auth.GetRedirectUri(configData.PublicServer.Hostname))
+		statusCode, fleetToken, err := tesla_api.GetAuthorizationCode(data.Application.ClientId, *data.Application.ClientSecret, data.Application.Audience, params.Code, auth.GetRedirectUri(configData.PublicServer.Hostname))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), statusCode)
 			return
 		}
 

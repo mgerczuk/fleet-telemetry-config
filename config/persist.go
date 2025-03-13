@@ -76,7 +76,7 @@ func (u *User) doRefreshToken() {
 	data := LockPersist()
 	defer data.Unlock()
 
-	t, err := tesla_api.RefreshToken(data.Application.ClientId, u.Token.RefreshToken)
+	_, t, err := tesla_api.RefreshToken(data.Application.ClientId, u.Token.RefreshToken)
 	if err != nil {
 		return
 	}

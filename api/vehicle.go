@@ -134,7 +134,7 @@ func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
 	expires := exp.Add(time.Minute * -10)
 
 	if expires.Before(time.Now()) {
-		t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
+		_, t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
 		if err != nil {
 			return "", err
 		}

@@ -2,7 +2,6 @@ package teslalogger_api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,25 +12,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ApiResult struct {
-	Response         *string `json:"response"`
-	Error            *string `json:"error"`
-	ErrorDescription *string `json:"error_description"`
-}
-
-func ApiError(err error) ApiResult {
-	msg := err.Error()
-	return ApiResult{
-		Response: nil,
-		Error:    &msg,
+func asErrorObject(errmsg string) string {
+	res := struct {
+		Error string `json:"error"`
+	}{
+		Error: errmsg,
 	}
-}
-
-func ApiErrorString(err string) ApiResult {
-	return ApiResult{
-		Response: nil,
-		Error:    &err,
-	}
+	s, _ := json.Marshal(res)
+	return string(s)
 }
 
 func RefreshToken(w http.ResponseWriter, r *http.Request) {
@@ -41,16 +29,14 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	params, err := url.ParseQuery(string(bodyBytes))
-	log.Infof("%v %v", params, err)
+	log.Infof("/teslaredirect/refresh_token.php ParseQuery: params=%v error=%v", params, err)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ApiError(err))
+		http.Error(w, asErrorObject(err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	if !(params.Has("refresh_token") && params.Has("vin")) {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ApiErrorString("(400) parameter missing"))
+	if !params.Has("vin") {
+		http.Error(w, asErrorObject("parameter 'vin' missing"), http.StatusBadRequest)
 		return
 	}
 
@@ -63,14 +49,13 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user == nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(ApiErrorString("(404) vin not found"))
+		http.Error(w, asErrorObject("vin not found"), http.StatusNotFound)
 		return
 	}
 
-	t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
+	statusCode, t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), statusCode)
 		return
 	}
 
