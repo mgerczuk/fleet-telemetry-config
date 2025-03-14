@@ -33,16 +33,19 @@ func NewVehicleClient(baseUrl string, token string) VehicleClient {
 // ==========================================================================
 
 type FieldProp struct {
-	IntervalSeconds int `json:"interval_seconds"`
+	IntervalSeconds       int      `json:"interval_seconds"`
+	MinimumDelta          *float32 `json:"minimum_delta,omitempty"`
+	ResendIntervalSeconds *int     `json:"resend_interval_seconds,omitempty"`
 }
 
 type FleetTelemetryConfigData struct {
-	Port       int                  `json:"port"`
-	Exp        *int                 `json:"exp,omitempty"`
-	AlertTypes []string             `json:"alert_types"`
-	Fields     map[string]FieldProp `json:"fields"`
-	Ca         string               `json:"ca,omitempty"`
-	Hostname   string               `json:"hostname,omitempty"`
+	Port        int                  `json:"port"`
+	Exp         *int                 `json:"exp,omitempty"`
+	AlertTypes  []string             `json:"alert_types"`
+	Fields      map[string]FieldProp `json:"fields"`
+	Ca          string               `json:"ca,omitempty"`
+	Hostname    string               `json:"hostname,omitempty"`
+	PreferTyped *bool                `json:"prefer_typed,omitempty"`
 	// read-only
 	Aud *string `json:"aud,omitempty"`
 	Iss *string `json:"iss,omitempty"`
@@ -76,6 +79,8 @@ func (c *VehicleClient) GetFleetTelemetryConfig(vehicleTag string) (*GetFleetTel
 
 	defer res.Body.Close()
 
+	//util.LogResponseBody(res)
+
 	var body getFleetTelemetryConfigResponseBody
 	err = json.NewDecoder(res.Body).Decode(&body)
 	if err != nil {
@@ -97,6 +102,12 @@ func toMapClient(config *FleetTelemetryConfigData) jwt.MapClaims {
 	for key, val := range config.Fields {
 		v := map[string]interface{}{
 			"interval_seconds": val.IntervalSeconds,
+		}
+		if val.MinimumDelta != nil {
+			v["minimum_delta"] = val.MinimumDelta
+		}
+		if val.ResendIntervalSeconds != nil {
+			v["resend_interval_seconds"] = val.ResendIntervalSeconds
 		}
 		fields[key] = v
 	}
