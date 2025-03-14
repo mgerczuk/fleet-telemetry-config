@@ -13,6 +13,6 @@ require (
 require (
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/google/uuid v1.6.0
-	golang.org/x/sys v0.8.0 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	google.golang.org/protobuf v1.36.5 // indirect
 )

@@ -18,11 +18,11 @@ var version = "local build"
 
 func main() {
 
-	var applicationConfig string
-	var persistFile string
+	var configFilename string
+	var persistFilename string
 
-	flag.StringVar(&applicationConfig, "config", "config.json", "application configuration file")
-	flag.StringVar(&persistFile, "persist", "persist.json", "application persistent data")
+	flag.StringVar(&configFilename, "config", "config.json", "application configuration file")
+	flag.StringVar(&persistFilename, "persist", "persist.json", "application persistent data")
 	showVersion := flag.Bool("version", false, "show version and exit")
 	flag.Parse()
 
@@ -31,14 +31,19 @@ func main() {
 		return
 	}
 
-	configData, err := config.LoadApplicationConfiguration(applicationConfig)
+	configData, err := config.LoadApplicationConfiguration(configFilename)
 	if err != nil {
-		panic(fmt.Sprintf("Error loading config data from '%s': %s", applicationConfig, err.Error()))
+		panic(fmt.Sprintf("Error loading config data from '%s': %s", configFilename, err.Error()))
 	}
 
-	err = config.InitPersist(persistFile)
+	err = config.InitPersist(persistFilename)
 	if err != nil {
-		panic(fmt.Sprintf("Error loading persistent data from '%s': %s", persistFile, err.Error()))
+		panic(fmt.Sprintf("Error loading persistent data from '%s': %s", persistFilename, err.Error()))
+	}
+
+	err = api.CheckCertificate(configData)
+	if err != nil {
+		panic(fmt.Sprintf("Error checking certificates: %s", err.Error()))
 	}
 
 	muxPublic := http.NewServeMux()

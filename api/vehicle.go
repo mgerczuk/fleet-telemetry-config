@@ -18,6 +18,8 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 		data := config.LockPersist()
 		defer data.Unlock()
 
+		//util.LogRequestBody(r)
+
 		var params struct {
 			Uid    string   `json:"uid"`
 			Vins   []string `json:"vins"`
@@ -28,7 +30,9 @@ func SendTelemetryConfig(configData config.Config) http.HandlerFunc {
 				Fields     map[string]tesla_api.FieldProp `json:"fields"`
 			} `json:"config"`
 		}
-		err := json.NewDecoder(r.Body).Decode(&params)
+		decoder := json.NewDecoder(r.Body)
+		decoder.DisallowUnknownFields()
+		err := decoder.Decode(&params)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -120,7 +124,7 @@ func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
 
 	user, exists := data.Users[uid]
 	if !exists {
-		return "", errors.New(fmt.Sprintf("uid '%s' not found", uid))
+		return "", fmt.Errorf("uid '%s' not found", uid)
 	}
 
 	if user.Token == nil {
@@ -143,4 +147,47 @@ func GetValidAccessToken(data *config.Persist, uid string) (string, error) {
 	}
 
 	return user.Token.AccessToken, nil
+}
+
+func RefreshTelemetryConfigCertificate(configData *config.Config, data *config.Persist, uid string) error {
+
+	user, exists := data.Users[uid]
+	if !exists {
+		return fmt.Errorf("uid '%s' not found", uid)
+	}
+
+	if len(user.Vins) == 0 {
+		return nil
+	}
+
+	token, err := GetValidAccessToken(data, uid)
+	if err != nil {
+		return fmt.Errorf("GetValidAccessToken: %s", err.Error())
+	}
+
+	client := tesla_api.NewVehicleClient(data.Application.Audience, token)
+
+	response, err := client.GetFleetTelemetryConfig(user.Vins[0])
+	if err != nil {
+		return fmt.Errorf("GetFleetTelemetryConfig: %s", err.Error())
+	}
+
+	if len(response.Config.Fields) == 0 {
+		return nil
+	}
+
+	telemetryConfig := response.Config
+
+	buf, err := os.ReadFile(configData.PublicServer.Cert)
+	if err != nil {
+		return fmt.Errorf("cannot access cert %s: %s", configData.PublicServer.Cert, err.Error())
+	}
+	telemetryConfig.Ca = string(buf)
+
+	_, err = client.CreateFleetTelemetryConfig(&telemetryConfig, user.Vins, data.Keys.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("CreateFleetTelemetryConfig: %s", err.Error())
+	}
+
+	return err
 }

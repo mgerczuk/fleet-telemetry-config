@@ -95,6 +95,7 @@ type Persist struct {
 	Keys                 Keys                 `json:"keys,omitempty"`
 	Users                map[string]*User     `json:"users,omitempty"`
 	FleetTelemetryConfig FleetTelemetryConfig `json:"fleet_telemetry_config"`
+	CAChecksum           string               `json:"ca_checksum"`
 
 	filename string     `json:"-"`
 	mtx      sync.Mutex `json:"-"`
