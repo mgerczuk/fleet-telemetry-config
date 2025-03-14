@@ -119,6 +119,7 @@
                 config: config
             }
             console.log(JSON.stringify(data, null, 3))
+            document.getElementById("send_config_result").textContent = "wait..."
 
             postData("/api/send_telemetry_config", JSON.stringify(data), function (code, body) {
                 document.getElementById("send_config_result").textContent = body
@@ -136,6 +137,7 @@
             })
             console.log(params.toString())
 
+            document.getElementById("get_config_result").textContent = "wait..."
 
             getData(
                 "/api/vehicle_telemetry_config?" + params.toString(),
@@ -143,6 +145,7 @@
                     console.log(body)
                     if (code >= 400) {
                         document.getElementById("get_config_result").textContent = body
+                        document.getElementById("get_config").value = ""
                         alert("get vehicle_telemetry_config failed")
                     } else {
                         document.getElementById("get_config_result").textContent = "Ok"
