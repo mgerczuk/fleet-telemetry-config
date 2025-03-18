@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/teslamotors/vehicle-command/pkg/protocol"
+	"github.com/teslamotors/vehicle-command/pkg/sign"
 )
 
 // https://developer.tesla.com/docs/fleet-api/endpoints/vehicle-endpoints
@@ -149,7 +150,7 @@ func (c *VehicleClient) CreateFleetTelemetryConfig(config *FleetTelemetryConfigD
 		return nil, err
 	}
 
-	token, err := protocol.SignMessageForFleet(key, "TelemetryClient", mc)
+	token, err := sign.SignMessageForFleet(key, "TelemetryClient", mc)
 	if err != nil {
 		return nil, err
 	}
