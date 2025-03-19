@@ -4,6 +4,8 @@
 <head></head>
 
 <body>
+    <input type="hidden" id="public-key-hex" />
+
     <a href="index.html">zurück</a>
 
     <h1>Configure Application</h1>
@@ -31,20 +33,16 @@
             href="https://developer.tesla.com/docs/fleet-api/authentication/overview#scopes">authentication overview
             page</a> for a list of available scopes.</p>
 
-    <p>Note: account creation requests can be automatically rejected if the application name already exists.</p>
+    <p><b>Note:</b> account creation requests may be automatically rejected if the application name already exists.</p>
 
     <p><a href="https://developer.tesla.com/dashboard" target="_blank"><button type="button"
                 class="w3-button w3-light-blue">Create Application and
                 Access
                 Dashboard</button></a></p>
 
-    <p>Enter values here:</p>
+    <p>Enter client id and secret here:</p>
 
     <table>
-        <tr>
-            <td>App Name:</td>
-            <td><input type="text" size="40" id="app_name" /></td>
-        </tr>
         <tr>
             <td>Client Id:</td>
             <td><input type="text" size="40" id="client_id"></td>
@@ -53,9 +51,21 @@
             <td>Client Secret:</td>
             <td><input type="text" size="40" id="client_secret"></td>
         </tr>
+        <tr style="height:20px" />
+        <tr>
+            <td>App Name:</td>
+            <td><input type="text" size="40" id="app_name" readonly /></td>
+        </tr>
         <tr>
             <td>Audience:</td>
-            <td><input type="text" size="40" id="audience" value="https://fleet-api.prd.eu.vn.cloud.tesla.com"></td>
+            <td><input type="text" size="40" id="audience" value="https://fleet-api.prd.eu.vn.cloud.tesla.com"
+                    readonly />
+            </td>
+        </tr>
+        <tr>
+            <td>Account Id:</td>
+            <td> <input type="text" size=40 id="account_id" readonly />
+            </td>
         </tr>
         <tr>
             <td />
@@ -66,8 +76,11 @@
 
     <h2>Step 3: Generate a Public/Private Key Pair</h2>
 
+    <p><b>Note:</b> The key pair should not be changed after the application was registered!</p>
+
     <p>
-        <button type="button" onclick="createNewKeys()" class="w3-button w3-light-blue">Create New Keys</button><br />
+        <button id="generate-key" type="button" onclick="createNewKeys()" class="w3-button w3-light-blue">Create New
+            Keys</button><br />
         <span id="create-keys-error"></span>
     </p>
 
@@ -78,10 +91,12 @@
     <p><textarea id="public_key" rows="5" cols="65"></textarea></p>
 
     <p>
-        <td><button type="button" onclick="saveKeys()" class="w3-button w3-light-blue">Save</button></td>
+        <td><button id="save-keys" type="button" onclick="saveKeys()" class="w3-button w3-light-blue">Save</button></td>
     </p>
 
     <h2>Step 4: Call the Register Endpoint</h2>
+
+    <p><b>Note:</b> The public server must be running in order to register the application!</p>
 
     <table>
         <tr>
@@ -91,28 +106,60 @@
         </tr>
         <tr>
             <td />
-            <td><button type="button" onclick="register()" class="w3-button w3-light-blue">Register</button></td>
+            <td><button id="register-button" type="button" onclick="register()"
+                    class="w3-button w3-light-blue">Register</button></td>
         </tr>
         <tr>
             <td />
-            <td><span id="register-result"></span></td>
+            <td>
+                <pre><span id="register-result"></span></pre>
+            </td>
         </tr>
     </table>
 
     <script type="text/javascript" src="tools.js"></script>
     <script type="text/javascript">
+        var config = null
+
         document.addEventListener("DOMContentLoaded", () => {
-            getData("/api/data/application")
+            getData("/api/data/config", processConfigData)
+            getData("/api/data/application", processApplicationData)
             getData("/api/data/keys")
-        });
+            getData("/api/data/keys?binary", processBinaryKeys)
+        })
+
+        function processConfigData(statusCode, bodyText) {
+            config = JSON.parse(bodyText)
+            console.log(config)
+        }
+
+        function processApplicationData(statusCode, bodyText) {
+            updateValueFromJson(bodyText)
+            updateKeyFields()
+        }
+
+        function processBinaryKeys(statusCode, bodyText) {
+            var bkeys = JSON.parse(bodyText)
+            document.getElementById("public-key-hex").value = bkeys.public_key
+        }
+
+        function updateKeyFields() {
+            var accountSet = !!document.getElementById("account_id").value
+
+            document.getElementById("generate-key").disabled = accountSet
+            document.getElementById("private_key").disabled = accountSet
+            document.getElementById("public_key").disabled = accountSet
+            document.getElementById("save-keys").disabled = accountSet
+        }
 
         function saveApplication() {
             var formData = JSON.stringify({
                 app_name: document.getElementById("app_name").value,
                 client_id: document.getElementById("client_id").value,
                 client_secret: document.getElementById("client_secret").value,
-                audience: document.getElementById("audience").value
-            });
+                audience: document.getElementById("audience").value,
+                account_id: document.getElementById("account_id").value
+            })
 
             putData("/api/data/application", formData)
         }
@@ -121,7 +168,7 @@
             var formData = JSON.stringify({
                 private_key: document.getElementById("private_key").value,
                 public_key: document.getElementById("public_key").value
-            });
+            })
 
             putData("/api/data/keys", formData)
         }
@@ -129,10 +176,36 @@
         function register() {
             var formData = JSON.stringify({
                 scope: document.getElementById("scope_register").value
-            });
+            })
 
             postData("/api/register", formData, function (statusCode, bodyText) {
-                document.getElementById("register-result").textContent = bodyText
+                //*TEMP*/bodyText = "{\"account_id\": \"6d4a6d08-f9b0-4aa0-b62d-6ec45de5f0a1\",\"ca\": null,\"client_id\": \"f5465c88-3456-471f-bceb-3455e5b1e3b6\",\"created_at\": \"2024-12-05T14:25:06.593Z\",\"csr\": null,\"csr_updated_at\": null,\"description\": \"Speicherung und Auswertung von Fahrzeugdaten\",\"domain\": \"tesla.mgsoftware.de\",\"enterprise_tier\": \"pay_as_you_go\",\"issuer\": null,\"name\": \"Martins TeslaLogger TEST\",\"public_key\": \"04728cc1edad71daa1f998511d96187b57f30fa006d4203ac37c55c3f9d7ac25b0441fe1f5ef3259d9dcafd97fdec36f9cba5453f0d123d4f8ab4c501492729534\",\"updated_at\": \"2025-02-21T17:15:56.348Z\"}"
+                //*TEMP*/statusCode = 200
+                var resultText
+                if (statusCode != 200) {
+                    resultText = bodyText
+                }
+                else {
+                    registerResult = JSON.parse(bodyText)
+                    if (registerResult.domain != config.public_server.hostname) {
+                        resultText = `Reported hostname(${registerResult.domain}) differs from configured(${config.public_server.hostname})`
+                    }
+                    else if (registerResult.public_key != document.getElementById("public-key-hex").value) {
+                        resultText = "The reported public key does not match. You have to use the same keys you used for the first registration."
+                    }
+                    else {
+                        resultText = JSON.stringify(registerResult, null, 2)
+
+                        document.getElementById("account_id").value = registerResult.account_id
+                        document.getElementById("app_name").value = registerResult.name
+
+                        saveApplication()
+                        updateKeyFields()
+                    }
+                }
+                document.getElementById("register-result").textContent = resultText
+
+                console.log(registerResult)
             })
         }
 

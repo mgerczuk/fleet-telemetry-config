@@ -1,24 +1,24 @@
 function updateValueFromJson(json) {
-    var response = JSON.parse(json);
+    var response = JSON.parse(json)
     for (var prop in response) {
         var ele = document.getElementById(prop)
         if (ele) {
             if (ele instanceof HTMLInputElement) {
-                ele.value = response[prop];
+                ele.value = response[prop]
             } else {
-                ele.textContent = response[prop];
+                ele.textContent = response[prop]
             }
-            console.log(prop + " set to ")
+            console.log(`${prop} set to '${response[prop]}'`)
         }
         else {
-            console.log(prop + " not found!")
+            console.log(`${prop} not found!`)
         }
     }
 }
 
 function getData(url, callback = null) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', url, true)
 
     xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
@@ -37,9 +37,9 @@ function getData(url, callback = null) {
 function postData(url, formData, callback = null) {
     console.log("postData " + formData)
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
+    var xhr = new XMLHttpRequest()
+    xhr.open('POST', url, true)
+    xhr.setRequestHeader("Content-Type", "application/json")
 
     xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
@@ -51,15 +51,15 @@ function postData(url, formData, callback = null) {
         }
     }
 
-    xhr.send(formData);
+    xhr.send(formData)
 }
 
 function putData(url, formData) {
     console.log("putData " + formData)
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('PUT', url, true);
-    xhr.setRequestHeader("Content-Type", "application/json");
+    var xhr = new XMLHttpRequest()
+    xhr.open('PUT', url, true)
+    xhr.setRequestHeader("Content-Type", "application/json")
 
     xhr.onreadystatechange = function () {
         if (this.readyState === XMLHttpRequest.DONE) {
@@ -68,17 +68,17 @@ function putData(url, formData) {
         }
     }
 
-    xhr.send(formData);
+    xhr.send(formData)
 }
 
 function deleteData(url, formData, callback = null) {
     console.log("deleteData " + formData)
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('DELETE', url, true);
+    var xhr = new XMLHttpRequest()
+    xhr.open('DELETE', url, true)
 
     if (formData != null) {
-        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.setRequestHeader("Content-Type", "application/json")
     }
 
     xhr.onreadystatechange = function () {
@@ -91,5 +91,5 @@ function deleteData(url, formData, callback = null) {
         }
     }
 
-    xhr.send(formData);
+    xhr.send(formData)
 }

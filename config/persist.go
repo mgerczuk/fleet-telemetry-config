@@ -12,9 +12,10 @@ import (
 )
 
 type Application struct {
-	AppName      string  `json:"app_name,omitempty"`
-	ClientId     string  `json:"client_id,omitempty"`
-	ClientSecret *string `json:"client_secret,omitempty"`
+	AppName      string `json:"app_name,omitempty"`
+	ClientId     string `json:"client_id,omitempty"`
+	ClientSecret string `json:"client_secret,omitempty"`
+	AccountId    string `json:"account_id,omitempty"`
 
 	// the base url for Tesla API see https://developer.tesla.com/docs/fleet-api/getting-started/base-urls
 	// TODO: Is needed for app registration and vehicle configuration. Better store with user?

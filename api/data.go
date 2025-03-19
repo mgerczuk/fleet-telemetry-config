@@ -6,10 +6,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/google/uuid"
 	"github.com/mgerczuk/fleet-telemetry-config/config"
@@ -51,6 +54,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		data.Application.ClientId = app.ClientId
 		data.Application.ClientSecret = app.ClientSecret
 		data.Application.Audience = app.Audience
+		data.Application.AccountId = app.AccountId
 		err = config.PutPersist(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -69,7 +73,23 @@ func getKeys(w http.ResponseWriter, r *http.Request) {
 
 	switch method := r.Method; method {
 	case "GET":
-		json.NewEncoder(w).Encode(data.Keys)
+		params, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if len(params) == 0 {
+			json.NewEncoder(w).Encode(data.Keys)
+		} else if params.Has("binary") {
+			binKeys, err := toBinary(data.Keys)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("error creating binary public key: '%s'", err.Error()), http.StatusInternalServerError)
+			}
+			json.NewEncoder(w).Encode(binKeys)
+		} else {
+			http.Error(w, fmt.Sprintf("invalid parameter '%s'", r.URL.RawQuery), http.StatusBadRequest)
+		}
 
 	case "PUT":
 		var keys config.Keys
@@ -146,6 +166,27 @@ func createKeys() (privateKeyPEM string, publicKeyPEM string, err error) {
 	}
 
 	return privateKeyRow.String(), publicKeyRow.String(), nil
+}
+
+func toBinary(keys config.Keys) (*config.Keys, error) {
+
+	var result config.Keys
+
+	privatePemBlock, _ := pem.Decode([]byte(keys.PrivateKey))
+	if privatePemBlock == nil || privatePemBlock.Type != "EC PRIVATE KEY" {
+		return nil, errors.New("invalid private key PEM")
+	}
+
+	privateKey, err := x509.ParseECPrivateKey(privatePemBlock.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	result.PublicKey = hex.EncodeToString(elliptic.Marshal(elliptic.P256(), privateKey.X, privateKey.Y))
+
+	// TODO: is there a default hex representation of the private key?
+
+	return &result, nil
 }
 
 func handleUsers(w http.ResponseWriter, r *http.Request) {
