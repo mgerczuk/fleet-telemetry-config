@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"time"
 
 	"github.com/mgerczuk/fleet-telemetry-config/config"
 	"github.com/mgerczuk/fleet-telemetry-config/tesla_api"
@@ -51,6 +52,14 @@ func RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if user == nil {
 		http.Error(w, asErrorObject("vin not found"), http.StatusNotFound)
 		return
+	}
+
+	d, err := user.Token.IssuedAt()
+	if err == nil {
+		if time.Now().Before(d.Add(time.Minute * 5)) {
+			json.NewEncoder(w).Encode(*user.Token)
+			return
+		}
 	}
 
 	statusCode, t, err := tesla_api.RefreshToken(data.Application.ClientId, user.Token.RefreshToken)
