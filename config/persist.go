@@ -83,7 +83,10 @@ func (u *User) doRefreshToken() {
 	}
 	u.SetToken(t)
 
-	PutPersist(data)
+	err = PutPersist(data)
+	if err != nil {
+		log.Error("Failed to persist updated token")
+	}
 }
 
 type FleetTelemetryConfig struct {

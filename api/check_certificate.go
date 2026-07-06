@@ -44,7 +44,11 @@ func CheckCertificate(configData *config.Config) error {
 	log.Info("Refreshing telemetry config certificates - done")
 
 	data.CAChecksum = cs
-	config.PutPersist(data)
+
+	err = config.PutPersist(data)
+	if err != nil {
+		return fmt.Errorf("cannot persist updated CA checksum: %s", err.Error())
+	}
 
 	return nil
 }

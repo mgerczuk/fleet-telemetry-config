@@ -55,6 +55,7 @@ func getApplication(w http.ResponseWriter, r *http.Request) {
 		data.Application.ClientSecret = app.ClientSecret
 		data.Application.Audience = app.Audience
 		data.Application.AccountId = app.AccountId
+
 		err = config.PutPersist(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -100,6 +101,7 @@ func getKeys(w http.ResponseWriter, r *http.Request) {
 		}
 		data.Keys.PrivateKey = keys.PrivateKey
 		data.Keys.PublicKey = keys.PublicKey
+
 		err = config.PutPersist(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -291,6 +293,7 @@ func getTelemetryConfig(w http.ResponseWriter, r *http.Request) {
 
 		data.FleetTelemetryConfig.Vins = keys.Vins
 		data.FleetTelemetryConfig.Config = keys.Config
+
 		err = config.PutPersist(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)

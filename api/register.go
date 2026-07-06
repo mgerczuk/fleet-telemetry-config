@@ -80,7 +80,12 @@ func GetInitialToken(configData config.Config) http.HandlerFunc {
 		}
 
 		user.SetToken(fleetToken)
-		config.PutPersist(data)
+
+		err = config.PutPersist(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		json.NewEncoder(w).Encode(fleetToken)
 	}
