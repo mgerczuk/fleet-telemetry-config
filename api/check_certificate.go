@@ -38,7 +38,7 @@ func CheckCertificate(configData *config.Config) error {
 	for userId := range data.Users {
 		err := RefreshTelemetryConfigCertificate(configData, data, userId)
 		if err != nil {
-			log.Fatalf("*** RefreshTelemetryConfig failed: %s", err.Error())
+			return err
 		}
 	}
 	log.Info("Refreshing telemetry config certificates - done")

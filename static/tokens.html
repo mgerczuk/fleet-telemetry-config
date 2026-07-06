@@ -18,7 +18,8 @@
     <table>
         <tr>
             <td>Scope:</td>
-            <td><input type="text" size="60" id="scope_authorize" value="openid vehicle_device_data offline_access">
+            <td><input type="text" size="60" id="scope_authorize"
+                    value="openid offline_access vehicle_device_data vehicle_location">
             </td>
         </tr>
         <tr>
@@ -33,8 +34,12 @@
 
     <p><a href="https://developer.tesla.com/docs/fleet-api/fleet-telemetry">Original Documentation</a></p>
 
-    <p>To pair the key to the vehicle go to <a id="pair" href="https://tesla.com/_ak/developer-domain.com">
-            https://tesla.com/_ak/&lt;developer-domain.com&gt;</a>
+    <p>Make sure you are logged into the Tesla app with the same email as in the authorization step. Then<br />
+        <a id="pair" href="https://tesla.com/_ak/developer-domain.com">
+            <button type="button" class="w3-button w3-light-blue">
+                Pair Key
+            </button>
+        </a>
     </p>
 
     <script type="text/javascript" src="tools.js"></script>
@@ -71,7 +76,6 @@
 
             s = "https://tesla.com/_ak/" + response.public_server.hostname
             document.getElementById("pair").href = s
-            document.getElementById("pair").innerHTML = s
         }
 
         function authorize() {

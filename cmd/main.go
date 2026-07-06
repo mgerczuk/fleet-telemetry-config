@@ -24,6 +24,7 @@ func main() {
 	flag.StringVar(&configFilename, "config", "config.json", "application configuration file")
 	flag.StringVar(&persistFilename, "persist", "persist.json", "application persistent data")
 	showVersion := flag.Bool("version", false, "show version and exit")
+	forceStart := flag.Bool("force", false, "force start even if certificate check fails")
 	flag.Parse()
 
 	fmt.Printf("fleet-telemetry-config version %s\n", version)
@@ -43,7 +44,12 @@ func main() {
 
 	err = api.CheckCertificate(configData)
 	if err != nil {
-		panic(fmt.Sprintf("Error checking certificates: %s", err.Error()))
+		if !*forceStart {
+			// default is to stop the service so that uptime monitoring can detect the problem and alert the user
+			panic(fmt.Sprintf("Error checking certificates: %s", err.Error()))
+		} else {
+			log.Warn("Certificate check failed, but force start is enabled")
+		}
 	}
 
 	muxPublic := http.NewServeMux()
