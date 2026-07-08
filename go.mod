@@ -5,7 +5,7 @@ go 1.23.4
 replace github.com/teslamotors/vehicle-command => github.com/mgerczuk/vehicle-command-api v0.3.3-api
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/teslamotors/vehicle-command v0.3.3
 )
